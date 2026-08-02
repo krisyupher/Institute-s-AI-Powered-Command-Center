@@ -46,5 +46,8 @@ yarn-error.log*
 # --- System files ---
 .DS_Store
 Thumbs.db
+
+# --- Local agent instructions ---
+CLAUDE.md
 CLAUDE.md
 \CLAUDE.md
