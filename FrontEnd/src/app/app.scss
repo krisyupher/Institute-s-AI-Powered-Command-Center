@@ -40,6 +40,17 @@
   font-weight: 600;
 }
 
+/* Temporary; removed with the stub-nav block in app.html. */
+.stub-nav {
+  margin-right: 0;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--border);
+}
+
+.stub-nav a {
+  font-size: 0.82rem;
+}
+
 .who {
   display: flex;
   align-items: center;

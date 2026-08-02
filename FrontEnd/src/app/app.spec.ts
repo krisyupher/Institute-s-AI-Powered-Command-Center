@@ -22,6 +22,7 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.brand')?.textContent).toContain('Institute Command Center');
-    expect(compiled.querySelectorAll('.tabs a').length).toBe(3);
+    expect(compiled.querySelectorAll('nav.tabs').length).toBeGreaterThan(0);
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 });

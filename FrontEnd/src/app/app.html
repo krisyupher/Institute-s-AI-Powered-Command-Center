@@ -7,6 +7,20 @@
     <a routerLink="/dashboard/admin" routerLinkActive="active">Admin</a>
   </nav>
 
+  <!--
+    Temporary link strip for the Ticket 1.5 placeholder pages, so the routes are
+    clickable before FE1's sidebar (Ticket 1.4) exists. Delete this block once the
+    real navigation lands — the routes themselves do not depend on it.
+  -->
+  <nav class="tabs stub-nav">
+    <a routerLink="/login" routerLinkActive="active">Login</a>
+    <a routerLink="/teacher/generator" routerLinkActive="active">Generator</a>
+    <a routerLink="/teacher/quizzes" routerLinkActive="active">Quizzes</a>
+    <a routerLink="/student/quizzes" routerLinkActive="active">Take</a>
+    <a routerLink="/student/results" routerLinkActive="active">Results</a>
+    <a routerLink="/admin/dashboard" routerLinkActive="active">Admin panel</a>
+  </nav>
+
   <div class="who">
     <span class="small">{{ user().fullName }}</span>
     <select
