@@ -1,0 +1,9 @@
+<aside class="h-full">
+  <ul class="menu bg-base-100 w-64 p-4 text-base-content gap-1 h-full">
+    @for (item of navItems(); track item.route) {
+      <li>
+        <a [routerLink]="item.route" routerLinkActive="active">{{ item.label }}</a>
+      </li>
+    }
+  </ul>
+</aside>

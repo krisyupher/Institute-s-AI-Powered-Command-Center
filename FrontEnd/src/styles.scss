@@ -5,7 +5,8 @@
 // but pinning the app dir keeps class extraction reliable for inline `template:` strings.
 @source "../app";
 
-// DaisyUI component kit, limited to the soft themes used across the app.
+// DaisyUI component kit, limited to the themes used across the app. `corporate` is the
+// shell theme (set via `data-theme="corporate"`); `light` is the registered fallback.
 @plugin "daisyui" {
   themes: corporate, light;
 }

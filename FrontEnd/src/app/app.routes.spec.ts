@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
+import { NavigationEnd, Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { firstValueFrom } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 import { routes } from './app.routes';
 
@@ -38,7 +40,19 @@ describe('app routes', () => {
 
   it('sends an unknown url to the dashboard', async () => {
     const harness = await RouterTestingHarness.create();
+    const router = TestBed.inject(Router);
+    // The `**` fallback redirects to `/dashboard`, whose DashboardRedirectComponent then
+    // imperatively navigates to the role's home page (`/dashboard/student`). That chained
+    // navigation is async, so wait for its NavigationEnd before asserting the final URL.
+    const settled = firstValueFrom(
+      router.events.pipe(
+        filter(
+          (e): e is NavigationEnd => e instanceof NavigationEnd && e.url === '/dashboard/student',
+        ),
+      ),
+    );
     await harness.navigateByUrl('/nope');
-    expect(TestBed.inject(Router).url).toBe('/dashboard/student');
+    await settled;
+    expect(router.url).toBe('/dashboard/student');
   });
 });

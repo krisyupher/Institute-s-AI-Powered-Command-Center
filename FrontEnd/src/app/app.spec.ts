@@ -17,12 +17,10 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should render the shell navigation', async () => {
+  it('should render the root router outlet', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('header.navbar')?.textContent).toContain('Institute Command Center');
-    expect(compiled.querySelectorAll('.menu').length).toBeGreaterThan(0);
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 });

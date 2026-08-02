@@ -1,0 +1,30 @@
+<header class="navbar bg-base-100 border-b border-base-200 px-4">
+  <div class="navbar-start">
+    <a routerLink="/dashboard" class="btn btn-ghost px-3 text-lg font-semibold">AI Manager</a>
+  </div>
+
+  <div class="navbar-end gap-3">
+    <select
+      class="select select-bordered select-sm"
+      [value]="role()"
+      (change)="switchRole($any($event.target).value)"
+      aria-label="Demo role"
+    >
+      @for (option of roles; track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+
+    <div class="flex items-center gap-3">
+      <div class="avatar placeholder">
+        <div class="bg-primary text-primary-content rounded-full w-10 h-10 flex items-center justify-center font-semibold">
+          <span>{{ initials() }}</span>
+        </div>
+      </div>
+      <div class="hidden text-sm leading-tight sm:block">
+        <span class="block font-medium">{{ user().fullName }}</span>
+        <span class="badge badge-primary badge-sm">{{ role() }}</span>
+      </div>
+    </div>
+  </div>
+</header>
