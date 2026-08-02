@@ -12,115 +12,95 @@ import { OccurrenceListComponent } from '../../shared/occurrence-list.component'
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (data(); as dashboard) {
-      <header class="page-head">
-        <h1>{{ dashboard.fullName }}</h1>
-        <p class="muted">Your teaching overview.</p>
+      <header class="mb-6">
+        <h1 class="text-2xl font-semibold">{{ dashboard.fullName }}</h1>
+        <p class="mt-1 text-base-content/70">Your teaching overview.</p>
       </header>
 
-      <section class="grid stats">
-        <div class="card">
-          <div class="stat-value">{{ dashboard.courses }}</div>
-          <div class="stat-label">Courses taught</div>
+      <section class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+          <div class="card-body p-5">
+            <div class="text-3xl font-semibold leading-tight">{{ dashboard.courses }}</div>
+            <div class="text-sm text-base-content/70">Courses taught</div>
+          </div>
         </div>
-        <div class="card">
-          <div class="stat-value">{{ dashboard.totalStudents }}</div>
-          <div class="stat-label">Students</div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+          <div class="card-body p-5">
+            <div class="text-3xl font-semibold leading-tight">{{ dashboard.totalStudents }}</div>
+            <div class="text-sm text-base-content/70">Students</div>
+          </div>
         </div>
-        <div class="card">
-          <div class="stat-value">{{ dashboard.pendingSubmissions }}</div>
-          <div class="stat-label">Submissions awaiting grading</div>
-        </div>
-      </section>
-
-      <section class="grid columns">
-        <div class="card">
-          <p class="card-title">My courses</p>
-          <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Course</th>
-                <th>Students</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (course of dashboard.myCourses; track course.id) {
-                <tr>
-                  <td><a [routerLink]="['/courses', course.id]">{{ course.code }}</a></td>
-                  <td>{{ course.name }}</td>
-                  <td>{{ course.enrolledStudents }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-
-        <div class="card">
-          <p class="card-title">Next seven days</p>
-          <app-occurrence-list
-            [occurrences]="dashboard.nextSevenDays"
-            emptyMessage="Nothing scheduled in the next week."
-          />
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+          <div class="card-body p-5">
+            <div class="text-3xl font-semibold leading-tight">{{ dashboard.pendingSubmissions }}</div>
+            <div class="text-sm text-base-content/70">Submissions awaiting grading</div>
+          </div>
         </div>
       </section>
 
-      <section class="card">
-        <p class="card-title">Announcements</p>
-        @if (dashboard.recentAnnouncements.length === 0) {
-          <p class="empty">No announcements.</p>
-        } @else {
-          @for (item of dashboard.recentAnnouncements; track item.id) {
-            <article class="announcement">
-              <div class="announcement-head">
-                <strong>{{ item.title }}</strong>
-                <span class="badge">{{ item.courseCode ?? 'Institution' }}</span>
-              </div>
-              <p class="muted small">{{ item.body }}</p>
-              <p class="muted small">{{ item.publishedAtUtc | date: 'd MMM' : 'UTC' }}</p>
-            </article>
+      <section class="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+        <div class="card bg-base-100 shadow-md border border-base-200 rounded-2xl">
+          <div class="card-body">
+            <p class="card-title">My courses</p>
+            <div class="overflow-x-auto">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Course</th>
+                    <th>Students</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (course of dashboard.myCourses; track course.id) {
+                    <tr>
+                      <td><a [routerLink]="['/courses', course.id]" class="link link-primary">{{ course.code }}</a></td>
+                      <td>{{ course.name }}</td>
+                      <td>{{ course.enrolledStudents }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-base-100 shadow-md border border-base-200 rounded-2xl">
+          <div class="card-body">
+            <p class="card-title">Next seven days</p>
+            <app-occurrence-list
+              [occurrences]="dashboard.nextSevenDays"
+              emptyMessage="Nothing scheduled in the next week."
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+        <div class="card-body">
+          <p class="card-title">Announcements</p>
+          @if (dashboard.recentAnnouncements.length === 0) {
+            <p class="italic text-base-content/60">No announcements.</p>
+          } @else {
+            @for (item of dashboard.recentAnnouncements; track item.id) {
+              <article class="border-b border-base-200 py-2 last:border-b-0">
+                <div class="flex items-center justify-between gap-3">
+                  <strong>{{ item.title }}</strong>
+                  <span class="badge badge-primary badge-sm">{{ item.courseCode ?? 'Institution' }}</span>
+                </div>
+                <p class="mt-1 text-sm text-base-content/70">{{ item.body }}</p>
+                <p class="mt-1 text-sm text-base-content/70">
+                  {{ item.authorName }} · {{ item.publishedAtUtc | date: 'd MMM' : 'UTC' }}
+                </p>
+              </article>
+            }
           }
-        }
+        </div>
       </section>
     } @else if (error()) {
-      <p class="error-text">{{ error() }}</p>
+      <p class="text-error">{{ error() }}</p>
     } @else {
-      <p class="muted">Loading…</p>
-    }
-  `,
-  styles: `
-    .page-head {
-      margin-bottom: 1.25rem;
-    }
-
-    .stats {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      margin-bottom: 1rem;
-    }
-
-    .columns {
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      margin-bottom: 1rem;
-      align-items: start;
-    }
-
-    .announcement {
-      padding: 0.6rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .announcement:last-child {
-      border-bottom: none;
-    }
-
-    .announcement-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .announcement p {
-      margin: 0.25rem 0 0;
+      <p class="text-base-content/70">Loading…</p>
     }
   `,
 })

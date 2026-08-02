@@ -11,117 +11,99 @@ import { AdminDashboard } from '../../core/models/api.models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (data(); as dashboard) {
-      <header class="page-head">
-        <h1>Institution overview</h1>
-        <p class="muted">Signed in as {{ dashboard.fullName }}.</p>
+      <header class="mb-6">
+        <h1 class="text-2xl font-semibold">Institution overview</h1>
+        <p class="mt-1 text-base-content/70">Signed in as {{ dashboard.fullName }}.</p>
       </header>
 
-      <section class="grid stats">
-        <div class="card">
-          <div class="stat-value">{{ dashboard.totalUsers }}</div>
-          <div class="stat-label">Total users</div>
+      <section class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+          <div class="card-body p-5">
+            <div class="text-3xl font-semibold leading-tight">{{ dashboard.totalUsers }}</div>
+            <div class="text-sm text-base-content/70">Total users</div>
+          </div>
         </div>
-        <div class="card">
-          <div class="stat-value">{{ dashboard.students }}</div>
-          <div class="stat-label">Students</div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+          <div class="card-body p-5">
+            <div class="text-3xl font-semibold leading-tight">{{ dashboard.students }}</div>
+            <div class="text-sm text-base-content/70">Students</div>
+          </div>
         </div>
-        <div class="card">
-          <div class="stat-value">{{ dashboard.teachers }}</div>
-          <div class="stat-label">Teachers</div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+          <div class="card-body p-5">
+            <div class="text-3xl font-semibold leading-tight">{{ dashboard.teachers }}</div>
+            <div class="text-sm text-base-content/70">Teachers</div>
+          </div>
         </div>
-        <div class="card">
-          <div class="stat-value">{{ dashboard.courses }}</div>
-          <div class="stat-label">Courses</div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+          <div class="card-body p-5">
+            <div class="text-3xl font-semibold leading-tight">{{ dashboard.courses }}</div>
+            <div class="text-sm text-base-content/70">Courses</div>
+          </div>
         </div>
-        <div class="card">
-          <div class="stat-value">{{ dashboard.activeEnrollments }}</div>
-          <div class="stat-label">Active enrollments</div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+          <div class="card-body p-5">
+            <div class="text-3xl font-semibold leading-tight">{{ dashboard.activeEnrollments }}</div>
+            <div class="text-sm text-base-content/70">Active enrollments</div>
+          </div>
         </div>
       </section>
 
-      <section class="card">
-        <p class="card-title">All courses</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Course</th>
-              <th>Teacher</th>
-              <th>Term</th>
-              <th>Students</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (course of dashboard.courses_; track course.id) {
-              <tr>
-                <td><a [routerLink]="['/courses', course.id]">{{ course.code }}</a></td>
-                <td>{{ course.name }}</td>
-                <td>{{ course.teacherName }}</td>
-                <td>{{ course.term }}</td>
-                <td>{{ course.enrolledStudents }}</td>
-              </tr>
+      <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+        <div class="card-body">
+          <p class="card-title">All courses</p>
+          <div class="overflow-x-auto">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Course</th>
+                  <th>Teacher</th>
+                  <th>Term</th>
+                  <th>Students</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (course of dashboard.courses_; track course.id) {
+                  <tr>
+                    <td><a [routerLink]="['/courses', course.id]" class="link link-primary">{{ course.code }}</a></td>
+                    <td>{{ course.name }}</td>
+                    <td>{{ course.teacherName }}</td>
+                    <td>{{ course.term }}</td>
+                    <td>{{ course.enrolledStudents }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+        <div class="card-body">
+          <p class="card-title">Recent announcements</p>
+          @if (dashboard.recentAnnouncements.length === 0) {
+            <p class="italic text-base-content/60">No announcements.</p>
+          } @else {
+            @for (item of dashboard.recentAnnouncements; track item.id) {
+              <article class="border-b border-base-200 py-2 last:border-b-0">
+                <div class="flex items-center justify-between gap-3">
+                  <strong>{{ item.title }}</strong>
+                  <span class="badge badge-primary badge-sm">{{ item.courseCode ?? 'Institution' }}</span>
+                </div>
+                <p class="mt-1 text-sm text-base-content/70">{{ item.body }}</p>
+                <p class="mt-1 text-sm text-base-content/70">
+                  {{ item.authorName }} · {{ item.publishedAtUtc | date: 'd MMM' : 'UTC' }}
+                </p>
+              </article>
             }
-          </tbody>
-        </table>
-      </section>
-
-      <section class="card announcements">
-        <p class="card-title">Recent announcements</p>
-        @if (dashboard.recentAnnouncements.length === 0) {
-          <p class="empty">No announcements.</p>
-        } @else {
-          @for (item of dashboard.recentAnnouncements; track item.id) {
-            <article class="announcement">
-              <div class="announcement-head">
-                <strong>{{ item.title }}</strong>
-                <span class="badge">{{ item.courseCode ?? 'Institution' }}</span>
-              </div>
-              <p class="muted small">{{ item.body }}</p>
-              <p class="muted small">
-                {{ item.authorName }} · {{ item.publishedAtUtc | date: 'd MMM' : 'UTC' }}
-              </p>
-            </article>
           }
-        }
+        </div>
       </section>
     } @else if (error()) {
-      <p class="error-text">{{ error() }}</p>
+      <p class="text-error">{{ error() }}</p>
     } @else {
-      <p class="muted">Loading…</p>
-    }
-  `,
-  styles: `
-    .page-head {
-      margin-bottom: 1.25rem;
-    }
-
-    .stats {
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      margin-bottom: 1rem;
-    }
-
-    .announcements {
-      margin-top: 1rem;
-    }
-
-    .announcement {
-      padding: 0.6rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .announcement:last-child {
-      border-bottom: none;
-    }
-
-    .announcement-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .announcement p {
-      margin: 0.25rem 0 0;
+      <p class="text-base-content/70">Loading…</p>
     }
   `,
 })

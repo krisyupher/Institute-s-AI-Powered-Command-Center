@@ -7,7 +7,7 @@ import { AuthService } from '../../core/auth/auth.service';
 @Component({
   selector: 'app-dashboard-redirect',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '<p class="muted">Loading your dashboard…</p>',
+  template: '<p class="text-base-content/70">Loading your dashboard…</p>',
 })
 export class DashboardRedirectComponent {
   constructor() {

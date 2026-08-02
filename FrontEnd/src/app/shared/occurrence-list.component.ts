@@ -13,71 +13,35 @@ import { CalendarOccurrence } from '../core/models/api.models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (occurrences().length === 0) {
-      <p class="empty">{{ emptyMessage() }}</p>
+      <p class="italic text-base-content/60">{{ emptyMessage() }}</p>
     } @else {
-      <ul class="list">
+      <ul class="divide-y divide-base-200">
         @for (occurrence of occurrences(); track $index) {
-          <li>
-            <div class="when">
-              <span class="day">{{ occurrence.startsAtUtc | date: 'EEE d MMM' : 'UTC' }}</span>
-              <span class="time">
+          <li class="grid grid-cols-1 gap-2 py-3 sm:grid-cols-[120px_1fr_auto] sm:items-center sm:gap-3">
+            <div>
+              <span class="block text-sm font-semibold">
+                {{ occurrence.startsAtUtc | date: 'EEE d MMM' : 'UTC' }}
+              </span>
+              <span class="block text-xs text-base-content/70">
                 {{ occurrence.startsAtUtc | date: 'HH:mm' : 'UTC' }} –
                 {{ occurrence.endsAtUtc | date: 'HH:mm' : 'UTC' }}
               </span>
             </div>
-            <div class="what">
-              <div class="title">{{ occurrence.title }}</div>
+            <div>
+              <div class="font-medium">{{ occurrence.title }}</div>
               @if (occurrence.location) {
-                <div class="muted small">{{ occurrence.location }}</div>
+                <div class="text-sm text-base-content/70">{{ occurrence.location }}</div>
               }
             </div>
-            <span class="badge" [class]="badgeClass(occurrence)">
+            <span
+              class="badge badge-sm justify-self-start sm:justify-self-end"
+              [class]="badgeClass(occurrence)"
+            >
               {{ occurrence.eventType }}
             </span>
           </li>
         }
       </ul>
-    }
-  `,
-  styles: `
-    .list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    li {
-      display: grid;
-      grid-template-columns: 120px 1fr auto;
-      gap: 0.75rem;
-      align-items: center;
-      padding: 0.6rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    li:last-child {
-      border-bottom: none;
-    }
-
-    .day {
-      display: block;
-      font-weight: 600;
-      font-size: 0.85rem;
-    }
-
-    .time {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .title {
-      font-weight: 500;
-    }
-
-    @media (max-width: 640px) {
-      li {
-        grid-template-columns: 1fr;
-      }
     }
   `,
 })
@@ -88,12 +52,12 @@ export class OccurrenceListComponent {
   protected badgeClass(occurrence: CalendarOccurrence): string {
     switch (occurrence.eventType) {
       case 'Class':
-        return 'badge-class';
+        return 'badge-primary';
       case 'Reminder':
       case 'AssignmentDue':
-        return 'badge-reminder';
+        return 'badge-accent';
       default:
-        return '';
+        return 'badge-secondary';
     }
   }
 }
