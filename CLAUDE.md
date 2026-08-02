@@ -5,10 +5,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current state vs. the README
 
 The root [README.md](README.md) describes the **target** system (`FrontEnd/`, `BackEnd/`,
-`DataBase/`, `Documentation/`). Only `FrontEnd/` exists on disk today, and it is a fresh
-Angular CLI 21 scaffold: empty `routes`, a single `App` shell component, no services, no
-HTTP client provider, no auth. The backend, mock data, and documentation directories are
-not written yet.
+`DataBase/`, `Documentation/`). Only `FrontEnd/` exists on disk today, and only the
+dashboard feature is built. The backend, mock data, and documentation directories are not
+written yet.
+
+Because there is no API, the frontend runs on mocks:
+
+- [dashboard.api.ts](FrontEnd/src/app/core/api/dashboard.api.ts) returns
+  [dashboard.mock.ts](FrontEnd/src/app/core/mock/dashboard.mock.ts) via `of(...)` with a
+  simulated delay. Its method signatures already match
+  `GET /api/dashboard/{student|teacher|admin}` — swapping in `HttpClient` is a one-file
+  change, and no component moves.
+- [auth.service.ts](FrontEnd/src/app/core/auth/auth.service.ts) is a stand-in: the role is
+  picked from the shell's dropdown and kept in `localStorage`, not decoded from a JWT. It
+  exposes the real service's shape (`user`, `role`, `homeRoute`, `hasRole`) plus a demo-only
+  `setRole`. There is no login screen, guard, or interceptor yet.
+- [api.models.ts](FrontEnd/src/app/core/models/api.models.ts) mirrors the full backend DTO
+  contract, including types nothing consumes yet — keep it as the single source of truth.
+- Mock dates are generated relative to today, so the "next seven days" panels are never
+  empty. Keep that property when editing the mock.
+- `/courses/:id` and `/assignments` resolve to a "not built yet" placeholder so dashboard
+  links don't dead-end. Replace those routes as the real pages land.
 
 Treat the README as the spec to build toward, not a description of existing code. Do not
 assume a file, service, or endpoint it mentions exists — check first.
@@ -28,6 +45,9 @@ npm test         # ng test
 ```
 
 Single test file: `npx ng test --include src/app/app.spec.ts`
+
+The app opens on `/dashboard`, which redirects by role via `AuthService.homeRoute()`. Use
+the role dropdown in the top bar to reach the teacher and admin dashboards.
 
 There is **no linter configured** — no ESLint, no `lint` script. Formatting is Prettier
 via the `prettier` key in [FrontEnd/package.json](FrontEnd/package.json) (100 cols, single
