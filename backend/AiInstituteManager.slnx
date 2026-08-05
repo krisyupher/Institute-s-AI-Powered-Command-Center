@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="AiInstituteManager.API/AiInstituteManager.API.csproj" />
+  <Project Path="AiInstituteManager.Domain/AiInstituteManager.Domain.csproj" />
+  <Project Path="AiInstituteManager.Infrastructure/AiInstituteManager.Infrastructure.csproj" />
+</Solution>
