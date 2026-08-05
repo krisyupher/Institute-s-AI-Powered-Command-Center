@@ -7,10 +7,6 @@ namespace AiInstituteManager.Infrastructure.Repositories
     {
         private readonly ApplicationDbContext _context;
 
-        // Lazy<T> means each repository is only actually constructed the
-        // first time something asks for it — a controller that only
-        // touches Quizzes never pays the cost of building a Users
-        // repository too.
         private readonly Lazy<IGenericRepository<User>> _users;
         private readonly Lazy<IGenericRepository<Subject>> _subjects;
         private readonly Lazy<IGenericRepository<Quiz>> _quizzes;
