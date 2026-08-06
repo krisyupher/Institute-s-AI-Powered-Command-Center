@@ -1,0 +1,5 @@
+@AiInstituteManager.API_HostAddress = http://localhost:5218
+
+Accept: application/json
+
+###
