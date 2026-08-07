@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
-import { AuthService } from '../../auth/auth.service';
-import { RoleName } from '../../models/api.models';
+import { AuthService } from '../../services/auth.service';
+import { UserRole } from '../../models/user.model';
 
 /**
  * Top navigation bar for the shell: brand link plus the signed-in user's profile
@@ -22,7 +22,7 @@ export class HeaderComponent {
 
   protected readonly user = this.auth.user;
   protected readonly role = this.auth.role;
-  protected readonly roles: readonly RoleName[] = ['Student', 'Teacher', 'Administrator'];
+  protected readonly roles: readonly UserRole[] = ['Student', 'Teacher', 'Admin'];
 
   /** Initials for the avatar placeholder, e.g. "Elena Rivera" -> "ER". */
   protected readonly initials = computed(() =>
@@ -34,7 +34,7 @@ export class HeaderComponent {
   );
 
   /** Demo role switch: change the role, then land on that role's dashboard. */
-  protected switchRole(role: RoleName): void {
+  protected switchRole(role: UserRole): void {
     this.auth.setRole(role);
     void this.router.navigateByUrl(this.auth.homeRoute());
   }
