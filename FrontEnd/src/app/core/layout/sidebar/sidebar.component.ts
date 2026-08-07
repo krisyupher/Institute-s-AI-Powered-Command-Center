@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
-import { AuthService } from '../../auth/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 interface NavItem {
   label: string;
@@ -34,8 +34,7 @@ export class SidebarComponent {
           { label: 'Available Quizzes', route: '/student/quizzes' },
           { label: 'My Results', route: '/student/results' },
         ];
-      case 'Administrator':
-      case 'Staff':
+      case 'Admin':
         return [{ label: 'Dashboard', route: '/admin/dashboard' }];
       default:
         return [];
