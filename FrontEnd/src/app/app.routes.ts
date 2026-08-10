@@ -1,16 +1,12 @@
 import {Routes} from '@angular/router';
 
 import {MainLayoutComponent} from './core/layout/main-layout/main-layout.component';
+import {roleGuard} from './core/guards/role.guard';
 
-/**
- * Routing table.
- *
- * `login` sits outside the shell. Everything else is a child of `MainLayoutComponent`
- * (the Ticket 1.4 shell: header + sidebar + router outlet) whose paths are declared
- * relative to the empty parent. Feature pages are lazy (`loadComponent`) so each is its
- * own chunk and stays inside the production bundle budget; the shell itself is eager
- * since every authenticated view renders inside it.
- */
+// 'login' route is outside the main layout shell
+// All other routes inside MainLayout (router outlet + header/sidebar)
+// Feature pages use lazy loading (loadComponent) to save bundle space
+// Shell components load upfront since they appear on every page
 export const routes: Routes = [
   {
     path: 'login',
@@ -27,6 +23,7 @@ export const routes: Routes = [
 
       {
         path: 'teacher',
+        canActivate: [roleGuard('Teacher')],
         children: [
           {path: '', pathMatch: 'full', redirectTo: 'quizzes'},
           {
@@ -82,6 +79,7 @@ export const routes: Routes = [
 
       {
         path: 'admin',
+        canActivate: [roleGuard('Admin')],
         children: [
           {path: '', pathMatch: 'full', redirectTo: 'dashboard'},
           {
@@ -118,6 +116,7 @@ export const routes: Routes = [
           {
             path: 'teacher',
             title: 'Teacher dashboard',
+            canActivate: [roleGuard('Teacher')],
             loadComponent: () =>
               import('./features/dashboard/teacher-dashboard.component').then(
                 (m) => m.TeacherDashboardComponent,
@@ -126,6 +125,7 @@ export const routes: Routes = [
           {
             path: 'admin',
             title: 'Institution overview',
+            canActivate: [roleGuard('Admin')],
             loadComponent: () =>
               import('./features/dashboard/admin-dashboard.component').then(
                 (m) => m.AdminDashboardComponent,
