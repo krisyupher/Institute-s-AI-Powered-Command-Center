@@ -14,7 +14,7 @@ namespace AiInstituteManager.API.Extensions
     /// </summary>
     public static class DatabaseSeedingExtensions
     {
-        public static async Task ApplyMigrationsAndSeedAsync(this WebApplication app)
+        public static async Task ApplyDbMigrationsAndSeedAsync(this WebApplication app)
         {
             // A scope is required because ApplicationDbContext is
             // registered as Scoped, but this method runs during startup,
