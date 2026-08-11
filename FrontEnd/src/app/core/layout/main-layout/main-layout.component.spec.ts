@@ -1,3 +1,4 @@
+import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -7,7 +8,10 @@ describe('MainLayoutComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MainLayoutComponent],
-      providers: [provideRouter([{ path: '', component: MainLayoutComponent }])],
+      providers: [
+        provideHttpClient(),
+        provideRouter([{ path: '', component: MainLayoutComponent }]),
+      ],
     }).compileComponents();
   });
 
