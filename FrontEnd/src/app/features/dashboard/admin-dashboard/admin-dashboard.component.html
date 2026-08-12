@@ -1,0 +1,98 @@
+@if (loading()) {
+  <p class="text-base-content/70">Loading analytics…</p>
+} @else if (error()) {
+  <p class="text-error">{{ error() }}</p>
+} @else {
+  <header class="mb-6">
+    <h1 class="text-2xl font-semibold">Institution Overview</h1>
+    <p class="mt-1 text-base-content/70">Quiz analytics and system metrics</p>
+  </header>
+
+  <!-- KPI Cards -->
+  <section class="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-5">
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ dashboard().totalUsers }}</div>
+        <div class="text-sm text-base-content/70">Total Users</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ dashboard().students }}</div>
+        <div class="text-sm text-base-content/70">Students</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ dashboard().teachers }}</div>
+        <div class="text-sm text-base-content/70">Teachers</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ dashboard().courses }}</div>
+        <div class="text-sm text-base-content/70">Courses</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ quizStats().totalQuizzes }}</div>
+        <div class="text-sm text-base-content/70">Total Quizzes</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz Performance Section -->
+  <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+    <div class="card-body">
+      <p class="card-title">Quiz Performance Summary</p>
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Quizzes Created</th>
+            <th>Quizzes Published</th>
+            <th>Avg Score</th>
+            <th>Completion Rate</th>
+          </tr>
+          </thead>
+          <tbody>
+            @for (subject of quizSubjectStats(); track subject.id) {
+              <tr>
+                <td>{{ subject.name }}</td>
+                <td>{{ subject.quizzesCreated }}</td>
+                <td>{{ subject.quizzesPublished }}</td>
+                <td>{{ subject.avgScore }}%</td>
+                <td>{{ subject.completionRate }}%</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Activity -->
+  <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+    <div class="card-body">
+      <p class="card-title">Recent Quiz Activity</p>
+      <div class="space-y-3">
+        @for (activity of recentActivities(); track activity.id) {
+          <div class="border-b border-base-200 pb-2 last:border-b-0">
+            <div class="flex items-center justify-between gap-3">
+              <strong>{{ activity.title }}</strong>
+              <span class="badge"
+                    [class]="{'badge-success': activity.status === 'completed', 'badge-warning': activity.status === 'pending'}">
+                  {{ activity.status }}
+                </span>
+            </div>
+            <div class="text-sm text-base-content/70">
+              {{ activity.student }} · {{ activity.date }}
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+}
