@@ -5,6 +5,7 @@ import {
   MOCK_AVAILABLE_QUIZZES,
   MOCK_QUIZ_RESULTS,
   MOCK_QUIZZES,
+  MOCK_SUBJECTS,
 } from '../mock/mock-data';
 import {
   AvailableQuiz,
@@ -14,6 +15,7 @@ import {
   QuizResult,
   SubmitQuizRequest,
   SubmitQuizResponse,
+  Subject,
 } from '../models/quiz.model';
 
 // Builds a fresh draft question from the raw generator payload
@@ -85,5 +87,15 @@ export class QuizService {
   // Returns the calling student's past results
   getStudentResults(): Observable<QuizResult[]> {
     return of(MOCK_QUIZ_RESULTS).pipe(delay(QuizService.latencyMs));
+  }
+
+  // Returns full quiz entities (for a teacher's quiz list / management view)
+  getTeacherQuizzes(): Observable<Quiz[]> {
+    return of(MOCK_QUIZZES).pipe(delay(QuizService.latencyMs));
+  }
+
+  // Returns the subject breakdown used by the admin analytics dashboard
+  getSubjectStats(): Observable<Subject[]> {
+    return of(MOCK_SUBJECTS).pipe(delay(QuizService.latencyMs));
   }
 }
