@@ -8,9 +8,6 @@ namespace AiInstituteManager.Domain.Common
         public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; private set; }
-        public void MarkAsUpdated()
-        {
-            UpdatedAt = DateTime.UtcNow;
-        }
+        public void MarkAsUpdated() => UpdatedAt = DateTime.UtcNow;
     }
 }
