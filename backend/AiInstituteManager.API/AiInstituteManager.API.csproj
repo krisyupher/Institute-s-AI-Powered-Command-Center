@@ -7,9 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<!-- Design-time tooling for `dotnet ef` — must live in the STARTUP
-		 project (this one), even though ApplicationDbContext itself
-		 lives in Infrastructure. -->
 	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.11" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
 	  <PrivateAssets>all</PrivateAssets>
