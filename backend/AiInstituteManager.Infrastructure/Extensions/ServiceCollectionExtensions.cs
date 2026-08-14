@@ -1,8 +1,12 @@
+using AiInstituteManager.Domain.Entities;
 using AiInstituteManager.Infrastructure.Data;
 using AiInstituteManager.Infrastructure.Repositories;
+using AiInstituteManager.Infrastructure.Settings;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using AiInstituteManager.Infrastructure.Identity;
 
 namespace AiInstituteManager.Infrastructure.Extensions
 {
@@ -21,6 +25,31 @@ namespace AiInstituteManager.Infrastructure.Extensions
         {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
+            // ASP.NET Core Identity: manages users, password hashing, and
+            // login validation. AddEntityFrameworkStores wires it to OUR
+            // ApplicationDbContext instead of an in-memory store, so
+            // Identity's tables live in the same SQL Server database as
+            // everything else.
+            services.AddIdentity<User, IdentityRole<int>>(options =>
+            {
+                options.User.RequireUniqueEmail = true;
+
+                // Relaxed for local dev so you're not fighting password
+                // complexity rules while testing — tighten these
+                // (require digits, uppercase, symbols, longer length)
+                // before this ever goes anywhere near production.
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 6;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
+
+            // Binds the "Jwt" section of appsettings.json onto JwtSettings,
+            // so JwtTokenService can ask for IOptions<JwtSettings> instead
+            // of reading raw config strings itself.
+            services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+            services.AddScoped<ITokenService, JwtTokenService>();
 
             // Open generic registration: this ONE line tells the DI
             // container "whenever anyone asks for IGenericRepository<T>,

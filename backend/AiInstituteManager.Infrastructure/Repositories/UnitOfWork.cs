@@ -6,8 +6,6 @@ namespace AiInstituteManager.Infrastructure.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private readonly ApplicationDbContext _context;
-
-        private readonly Lazy<IGenericRepository<User>> _users;
         private readonly Lazy<IGenericRepository<Subject>> _subjects;
         private readonly Lazy<IGenericRepository<Quiz>> _quizzes;
         private readonly Lazy<IGenericRepository<Question>> _questions;
@@ -17,14 +15,12 @@ namespace AiInstituteManager.Infrastructure.Repositories
         {
             _context = context;
 
-            _users = new Lazy<IGenericRepository<User>>(() => new GenericRepository<User>(_context));
             _subjects = new Lazy<IGenericRepository<Subject>>(() => new GenericRepository<Subject>(_context));
             _quizzes = new Lazy<IGenericRepository<Quiz>>(() => new GenericRepository<Quiz>(_context));
             _questions = new Lazy<IGenericRepository<Question>>(() => new GenericRepository<Question>(_context));
             _quizResults = new Lazy<IGenericRepository<QuizResult>>(() => new GenericRepository<QuizResult>(_context));
         }
 
-        public IGenericRepository<User> Users => _users.Value;
         public IGenericRepository<Subject> Subjects => _subjects.Value;
         public IGenericRepository<Quiz> Quizzes => _quizzes.Value;
         public IGenericRepository<Question> Questions => _questions.Value;

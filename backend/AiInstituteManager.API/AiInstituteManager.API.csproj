@@ -7,18 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Design-time tooling for `dotnet ef` — must live in the STARTUP
-         project (this one), even though ApplicationDbContext itself
-         lives in Infrastructure. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.11" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.11" />
+	<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AiInstituteManager.Infrastructure\AiInstituteManager.Infrastructure.csproj" />
+	<ProjectReference Include="..\AiInstituteManager.Infrastructure\AiInstituteManager.Infrastructure.csproj" />
+	<ProjectReference Include="..\AiInstituteManager.Domain\AiInstituteManager.Domain.csproj" />
   </ItemGroup>
-
 </Project>
