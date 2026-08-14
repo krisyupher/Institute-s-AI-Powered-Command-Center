@@ -1,0 +1,77 @@
+<header class="mb-6">
+  <h1 class="text-2xl font-semibold">Teacher Dashboard</h1>
+  <p class="mt-1 text-base-content/70">Manage quizzes and monitor student progress</p>
+</header>
+
+@if (loading()) {
+  <p class="text-base-content/70">Loading quizzes…</p>
+} @else if (error()) {
+  <p class="text-error">{{ error() }}</p>
+} @else {
+  <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ myQuizzes().length }}</div>
+        <div class="text-sm text-base-content/70">Quizzes Created</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ publishedQuizzes().length }}</div>
+        <div class="text-sm text-base-content/70">Quizzes Published</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ totalResults() }}</div>
+        <div class="text-sm text-base-content/70">Student Attempts</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+    <div class="card-body">
+      <p class="card-title">My Quizzes</p>
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+          <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Students</th>
+            <th>Created</th>
+          </tr>
+          </thead>
+          <tbody>
+            @for (quiz of myQuizzes(); track quiz.id) {
+              <tr>
+                <td><a [routerLink]="['/teacher', 'quizzes', quiz.id]" class="link link-primary">{{ quiz.title }}</a></td>
+                <td>
+                      <span class="badge" [ngClass]="quiz.isPublished ? 'badge-success' : 'badge-warning'">
+                        {{ quiz.isPublished ? 'Published' : 'Draft' }}
+                      </span>
+                </td>
+                <td>{{ quiz.results?.length || 0 }}</td>
+                <td>{{ quiz.createdAt | date: 'd MMM' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+    <div class="card-body">
+      <p class="card-title">Quick Actions</p>
+      <div class="grid grid-cols-1 gap-3">
+        <button class="btn btn-primary w-full" routerLink="/teacher/generator">
+          Generate New Quiz
+        </button>
+        <button class="btn btn-outline w-full" routerLink="/teacher/quizzes">
+          View All Quizzes
+        </button>
+      </div>
+    </div>
+  </section>
+}

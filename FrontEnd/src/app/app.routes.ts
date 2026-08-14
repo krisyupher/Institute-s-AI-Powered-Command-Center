@@ -109,7 +109,7 @@ export const routes: Routes = [
             path: 'student',
             title: 'Student dashboard',
             loadComponent: () =>
-              import('./features/dashboard/student-dashboard.component').then(
+              import('./features/dashboard/student-dashboard/student-dashboard.component').then(
                 (m) => m.StudentDashboardComponent,
               ),
           },
@@ -118,7 +118,7 @@ export const routes: Routes = [
             title: 'Teacher dashboard',
             canActivate: [roleGuard('Teacher')],
             loadComponent: () =>
-              import('./features/dashboard/teacher-dashboard.component').then(
+              import('./features/dashboard/teacher-dashboard/teacher-dashboard.component').then(
                 (m) => m.TeacherDashboardComponent,
               ),
           },
@@ -127,7 +127,7 @@ export const routes: Routes = [
             title: 'Institution overview',
             canActivate: [roleGuard('Admin')],
             loadComponent: () =>
-              import('./features/dashboard/admin-dashboard.component').then(
+              import('./features/dashboard/admin-dashboard/admin-dashboard.component').then(
                 (m) => m.AdminDashboardComponent,
               ),
           },
