@@ -6,38 +6,47 @@ namespace AiInstituteManager.Infrastructure.Data.Seed
     /// <summary>
     /// Raw seed values live here, separate from DbInitializer, so the
     /// *data* (what gets seeded) is easy to find and edit without touching
-    /// the *orchestration logic* (how/when seeding runs). Ticket 1.2 asks
-    /// for default test users + sample Subject data — this is that data.
+    /// the *orchestration logic* (how/when seeding runs).
     ///
-    /// NOTE: User does not have a PasswordHash property yet because
-    /// ASP.NET Core Identity is scoped for Week 2 (Ticket 2.1). Once
-    /// Identity is wired in, Backend Dev will likely add a PasswordHash
-    /// (or IdentityUser) column, and this seed data will need a password
-    /// value added per user (e.g. "Teacher123!" as referenced in the
-    /// Week 2 verification checklist).
+    /// UPDATED for Ticket 2.2: since Ticket 2.1 made User extend
+    /// IdentityUser&lt;int&gt;, users can no longer be inserted as plain
+    /// entities — Identity needs to hash the password, and set UserName /
+    /// NormalizedEmail / SecurityStamp itself. DbInitializer now creates
+    /// these through UserManager instead of the raw DbSet, so each tuple
+    /// below pairs a User with the plaintext password UserManager will
+    /// hash on creation. These match the credentials referenced in the
+    /// Detailed Plan's Week 2 login test (teacher@humber.ca / Teacher123!).
     /// </summary>
     public static class SeedData
     {
-        public static List<User> Users => new()
+        public static IReadOnlyList<(User User, string Password)> Users => new List<(User, string)>
         {
-            new User
+            (new User
             {
-                FullName = "System Administrator",
+                UserName = "admin@humber.ca",
                 Email = "admin@humber.ca",
+                EmailConfirmed = true,
+                FullName = "System Administrator",
                 Role = UserRole.Admin
-            },
-            new User
+            }, "Admin123!"),
+
+            (new User
             {
-                FullName = "Demo Teacher",
+                UserName = "teacher@humber.ca",
                 Email = "teacher@humber.ca",
+                EmailConfirmed = true,
+                FullName = "Demo Teacher",
                 Role = UserRole.Teacher
-            },
-            new User
+            }, "Teacher123!"),
+
+            (new User
             {
-                FullName = "Demo Student",
+                UserName = "student@humber.ca",
                 Email = "student@humber.ca",
+                EmailConfirmed = true,
+                FullName = "Demo Student",
                 Role = UserRole.Student
-            }
+            }, "Student123!")
         };
 
         public static List<Subject> Subjects => new()
