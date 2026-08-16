@@ -9,10 +9,14 @@ import {
 } from '../mock/mock-data';
 import {
   AvailableQuiz,
+  CreateQuestionRequest,
   GenerateQuizRequest,
   Question,
   Quiz,
+  QuizDraft,
   QuizResult,
+  SaveQuizRequest,
+  SaveQuizResponse,
   SubmitQuizRequest,
   SubmitQuizResponse,
   Subject,
@@ -82,6 +86,58 @@ export class QuizService {
       completedAt: new Date().toISOString(),
     };
     return of(response).pipe(delay(QuizService.latencyMs));
+  }
+
+  // Returns the teacher's in-progress draft quiz (unpublished) for the
+  // preview-and-edit screen (Ticket 3.4). Mirrors `GET /api/quiz/{id}` for
+  // a draft; enriched with display-only difficulty + subject name.
+  getDraftQuiz(): Observable<QuizDraft> {
+    const draft = MOCK_QUIZZES.find((q) => q.id === 3 && !q.isPublished);
+    if (!draft) {
+      return throwError(() => new Error('No draft quiz found'));
+    }
+    const subject = MOCK_SUBJECTS.find((s) => s.id === draft.subjectId);
+    const quizDraft: QuizDraft = {
+      ...draft,
+      difficulty: 'Medium',
+      subjectName: subject?.name ?? 'Unknown subject',
+    };
+    return of(quizDraft).pipe(delay(QuizService.latencyMs));
+  }
+
+  /**
+   * Saves a teacher-approved/edited quiz via `POST /api/quiz/save`.
+   * `isPublished: true` marks the draft as published (Ticket 3.4 human-in-
+   * the-loop flow). Selectively mocks persistence into the in-memory list
+   * so `getTeacherQuizzes()` reflects a freshly saved quiz.
+   */
+  saveQuiz(request: SaveQuizRequest): Observable<SaveQuizResponse> {
+    const now = new Date().toISOString();
+    const savedId = MOCK_QUIZZES.length + 1;
+    const saved: Quiz = {
+      id: savedId,
+      title: request.title,
+      isPublished: request.isPublished,
+      subjectId: request.subjectId,
+      createdByTeacherId: 1, // mock teacher (Elena Rivera)
+      questions: request.questions.map((q: CreateQuestionRequest, index) => ({
+        id: savedId * 100 + index + 1,
+        quizId: savedId,
+        text: q.text,
+        optionA: q.optionA,
+        optionB: q.optionB,
+        optionC: q.optionC,
+        optionD: q.optionD,
+        correctAnswer: q.correctAnswer,
+        createdAt: now,
+        updatedAt: null,
+      })),
+      results: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    MOCK_QUIZZES.push(saved);
+    return of(saved).pipe(delay(QuizService.latencyMs));
   }
 
   // Returns the calling student's past results

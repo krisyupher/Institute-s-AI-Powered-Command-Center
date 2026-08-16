@@ -94,3 +94,43 @@ export interface AvailableQuiz {
   questionCount: number;
   publishedAt: string;
 }
+
+// -----------------------------------------------------------------------
+// Shapes for the teacher save flow (`POST /api/quiz/save`)
+// -----------------------------------------------------------------------
+
+/**
+ * One teacher-approved/edited question payload. `id`, `quizId`, and the
+ * timestamp fields are assigned by the API from the underlying `Question`
+ * entity — they never travel into the save request.
+ */
+export interface CreateQuestionRequest {
+  text: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: AnswerOption;
+}
+
+/** Payload for `POST /api/quiz/save`: the edited quiz plus its questions. */
+export interface SaveQuizRequest {
+  title: string;
+  subjectId: number;
+  isPublished: boolean;
+  questions: CreateQuestionRequest[];
+}
+
+/** The persisted quiz returned by `POST /api/quiz/save`. */
+export type SaveQuizResponse = Quiz;
+
+/**
+ * A teacher-facing draft quiz: a full `Quiz` plus display metadata the
+ * backend does not persist today. `difficulty` only exists on the
+ * `POST /api/quiz/generate` request (see `QuizDifficulty`), and
+ * `subjectName` saves the preview UI an extra subject lookup.
+ */
+export interface QuizDraft extends Quiz {
+  difficulty: QuizDifficulty;
+  subjectName: string;
+}

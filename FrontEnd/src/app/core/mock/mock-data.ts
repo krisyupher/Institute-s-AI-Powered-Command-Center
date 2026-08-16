@@ -128,6 +128,45 @@ const qs2: Question[] = [
   },
 ];
 
+const qs3: Question[] = [
+  {
+    id: 31,
+    quizId: 3,
+    text: 'The null space of a matrix is…',
+    optionA: 'The set of vectors that map to the zero vector',
+    optionB: 'The column space after row reduction',
+    optionC: 'The transpose of the row space',
+    optionD: 'The determinant of the matrix',
+    correctAnswer: 'A',
+    createdAt: '2026-03-08T16:30:00Z',
+    updatedAt: null,
+  },
+  {
+    id: 32,
+    quizId: 3,
+    text: 'Two vectors are linearly independent when…',
+    optionA: 'One is a scalar multiple of the other',
+    optionB: 'Neither is a scalar multiple of the other',
+    optionC: 'Both have the same length',
+    optionD: 'Their dot product is positive',
+    correctAnswer: 'B',
+    createdAt: '2026-03-08T16:31:00Z',
+    updatedAt: null,
+  },
+  {
+    id: 33,
+    quizId: 3,
+    text: 'The rank of a 3×3 matrix with three pivot columns is…',
+    optionA: '1',
+    optionB: '2',
+    optionC: '3',
+    optionD: 'Undefined',
+    correctAnswer: 'C',
+    createdAt: '2026-03-08T16:32:00Z',
+    updatedAt: null,
+  },
+];
+
 // ------------------------------- Quizzes -----------------------------
 
 export const MOCK_QUIZZES: Quiz[] = [
@@ -159,7 +198,7 @@ export const MOCK_QUIZZES: Quiz[] = [
     isPublished: false,
     subjectId: 3,
     createdByTeacherId: 1,
-    questions: [],
+    questions: qs3,
     results: [],
     createdAt: '2026-03-08T16:30:00Z',
     updatedAt: null,

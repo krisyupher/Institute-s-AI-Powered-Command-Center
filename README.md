@@ -1,173 +1,99 @@
-# Institute's AI-Powered Command Center
+# Institute AI Management System
 
-A Blackboard-style education platform with an AI assistant that can **act** inside the
-application, not just answer questions.
+## Prerequisites
+- Windows with .NET 8 SDK installed
+- Node.js 18+ for frontend
 
-> "Add Class #4 to my calendar."
-> → resolves which class you mean, reads its schedule, sees it meets every Monday, and
-> creates a weekly recurring calendar event for the rest of the term.
-
+## Recreate Database (npm scripts)
 ```
-FrontEnd/       Angular 21 SPA (standalone components, signals, lazy routes)
-BackEnd/        .NET 10 Web API (Clean Architecture: Domain / Application / Infrastructure / Api)
-DataBase/       JSON mock data, loaded into SQLite via EF Core on first run
-Documentation/  Architecture notes and the AI assistant design
+cd backend
+npm run db-reset   # deletes institute.db and runs migrations
+```
+Equivalent manual commands:
+```
+cd backend/AiInstituteManager.API
+del institute.db
+dotnet ef database update
 ```
 
----
+## Run Backend API
 
-## Quick start
+### Simple method (npm)
+```
+cd backend
+npm start
+```
 
-Two terminals, no external services required.
-
-**1. API** (creates and seeds `institute.db` on first run)
-
-```bash
-cd BackEnd/src/Institute.Api
+### Manual method
+```
+cd backend/AiInstituteManager.API
 dotnet run
 ```
+- API: http://localhost:5133
+- Swagger UI: http://localhost:5133/swagger
 
-→ API on <http://localhost:5133>, Swagger UI at <http://localhost:5133/swagger>
+## Run Frontend Web App
 
-**2. Web app**
-
-```bash
+```
 cd FrontEnd
 npm install
 npm start
 ```
+- App: http://localhost:4200
 
-→ App on <http://localhost:4200>
+## Demo Accounts
 
-### Demo accounts
+| Role       | Email                      | Password     |
+|------------|----------------------------|--------------|
+| Student    | ana.morales@institute.edu  | Student123!  |
+| Teacher    | e.rivera@institute.edu      | Teacher123!  |
+| Administrator | admin@institute.edu    | Admin123!    |
 
-The login screen lists these and fills the form when you click one.
+## AI Assistant
 
-| Role          | Email                       | Password      |
-| ------------- | --------------------------- | ------------- |
-| Student       | `ana.morales@institute.edu` | `Student123!` |
-| Student       | `marco.diaz@institute.edu`  | `Student123!` |
-| Teacher       | `e.rivera@institute.edu`    | `Teacher123!` |
-| Administrator | `admin@institute.edu`       | `Admin123!`   |
-| Staff         | `registrar@institute.edu`   | `Staff123!`   |
+1. Log in as student (e.g., ana.morales)
+2. Open AI Assistant in web app
+3. Example commands:
+   - `Add Class #4 to my calendar`
+   - `What classes do I have tomorrow?`
+   - `Show me my assignments for this week`
+   - `When is my next Computer Science class?`
 
-### Try the assistant
+## Swagger API Documentation
 
-Sign in as Ana and open **AI Assistant**:
+- Access at: http://localhost:5133/swagger
+- Displays all API endpoints
+- Allows testing requests directly from browser
+- Shows request/response models, authentication requirements
+- Ideal for exploring endpoints before making frontend changes
 
-- `Add Class #4 to my calendar` — creates a weekly recurring event
-- `What classes do I have tomorrow?`
-- `Show me my assignments for this week`
-- `When is my next Computer Science class?`
-- `Create a reminder for my Physics assignment`
+## Backend NPM Scripts (cd backend)
 
-Sign in as **Marco** and ask `Add Class #3 to my calendar` — he takes two courses that
-both have a Class #3, so the assistant asks which one instead of guessing.
-
----
-
-## The AI assistant
-
-The assistant **never touches the database**. It calls controlled application services,
-which is what makes it safe:
-
-```
-User → ChatController → AiChatService → IAiProvider  (Claude or offline)
-                             │
-                             │ the model asks for a tool
-                             ▼
-                        IAiTool  ──► ICalendarService / ICourseService / …
-                                          │  ← authorization enforced here
-                                          ▼
-                                   IRepository<T> → EF Core → SQLite
-```
-
-Because tools call the same services the REST controllers call, an AI action is subject
-to exactly the same permission checks as the equivalent HTTP request. A student cannot
-use the assistant to reach a course they are not enrolled in — there is no path for it.
-
-Adding a capability means adding one `IAiTool` implementation and registering it. Nothing
-else in the pipeline changes.
-
-### Choosing a provider
-
-`Ai:Provider` in `appsettings.json` selects the backend:
-
-| Value     | Behaviour                                                                               |
-| --------- | --------------------------------------------------------------------------------------- |
-| `offline` | **Default.** Deterministic intent matching, no API key, no network. Runs the same tools. |
-| `claude`  | Anthropic Claude with native tool use. Requires an API key.                              |
-
-To use Claude:
-
-```bash
-setx ANTHROPIC_API_KEY "sk-ant-..."      # or set Ai:ApiKey in configuration
-```
-
-then set `"Provider": "claude"` in `BackEnd/src/Institute.Api/appsettings.json`.
-
-The offline provider exists to prove the abstraction is real: swapping providers changes
-no tool, no service, and no frontend code. It understands a fixed set of phrasings and
-says so when it doesn't — it is not a language model, and it is not trying to be one.
-
----
-
-## Tests
-
-```bash
-cd BackEnd && dotnet test        # 28 tests — recurrence, authorization, AI tools
-cd FrontEnd && npm test          # 16 tests — auth service, interceptor, route guards
-```
-
-The backend tests run against in-memory **SQLite** rather than the EF InMemory provider,
-so they exercise real query translation.
-
----
-
-## Architecture at a glance
-
-Dependencies point inward only; each layer knows nothing about the one outside it.
-
-```
-Institute.Api             controllers, JWT, RBAC policies, Swagger, DI composition root
-   ↓
-Institute.Infrastructure  EF Core, repositories, JSON seeder, JWT/BCrypt, AI providers
-   ↓
-Institute.Application     DTOs, services (all business logic), AI tools + chat orchestration
-   ↓
-Institute.Domain          entities, enums, repository interfaces — no dependencies at all
-```
-
-Key decisions and their reasoning are in
-[Documentation/ARCHITECTURE.md](Documentation/ARCHITECTURE.md).
-
----
-
-## Mock data
-
-`DataBase/` holds hand-editable JSON seeded on first run. Entities in `Institute.Domain`
-remain the schema of record, so moving to SQL Server or PostgreSQL is a provider change
-rather than a data rewrite. See [DataBase/README.md](DataBase/README.md).
-
-To reseed, delete `BackEnd/src/Institute.Api/institute.db` and restart the API.
-
----
+| Command         | Description                    |
+|-----------------|--------------------------------|
+| `npm start`     | Runs API server                |
+| `npm run db-reset` | Delete DB + run migrations   |
+| `npm run db-migrate` | Apply pending migrations   |
+| `npm run build` | Build solution                 |
+| `npm run test`  | Run unit tests                 |
 
 ## Configuration
 
-| Setting                     | Default                    | Notes                                         |
-| --------------------------- | -------------------------- | --------------------------------------------- |
-| `ConnectionStrings:Default` | `Data Source=institute.db` | Any EF Core provider works with a code change |
-| `Jwt:SigningKey`            | dev placeholder            | **Must** be replaced outside development      |
-| `Ai:Provider`               | `offline`                  | `offline` or `claude`                         |
-| `Ai:Model`                  | `claude-opus-5`            | Used by the Claude provider                   |
-| `Cors:Origins`              | `http://localhost:4200`    | Angular dev server                            |
+Edit `backend/AiInstituteManager.API/appsettings.json`:
+- `Jwt:SigningKey` - Must be set for production (currently placeholder)
+- `Ai:Provider` - Choose: `offline` (default) or `claude`
+- `ConnectionStrings:Default` - SQLite path if needed
 
-### Known limitations
+## Development Notes
 
-- **Times are institution-local, stored as UTC.** Class schedules are wall-clock times;
-  the UI renders them in UTC so a class defined as 08:00 always displays as 08:00. A
-  multi-timezone deployment would need a per-institution timezone on the schedule.
-- **No refresh tokens.** Access tokens last 8 hours and there is no rotation.
-- **Submissions are seeded, not uploadable.** Grading exists as data and API surface;
-  the submit/grade workflow UI is not built.
+- Database changes: `npm run db-migrate` after modifying entity configs
+- AI assistant calls flow through same API security as HTTP requests
+- Use Swagger to verify endpoint signatures and auth requirements
+- Frontend must route all AI requests through the ASP.NET Core API (no direct DB access)
+
+## Key Files
+
+- `backend/AiInstituteManager.API/Program.cs` - App entry, config, migration seeding
+- `backend/AiInstituteManager.Infrastructure/Data/ApplicationDbContext.cs` - EF Core DbContext
+- `backend/AiInstituteManager.Infrastructure/Migrations/` - Migration history
+- `docs/PROJECT_PLAN.md` - Detailed project plan and milestones

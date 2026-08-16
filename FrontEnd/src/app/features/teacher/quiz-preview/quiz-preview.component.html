@@ -1,0 +1,120 @@
+<header class="mb-6">
+  <h1 class="text-2xl font-semibold">Preview &amp; Edit Quiz</h1>
+  <p class="mt-1 text-base-content/70">
+    Review the AI draft below. Edit any question or option, then publish when satisfied.
+  </p>
+</header>
+
+@if (loading()) {
+  <p class="text-base-content/70">Loading draft quiz…</p>
+} @else if (error()) {
+  <div class="alert alert-error">
+    <span>{{ error() }}</span>
+  </div>
+} @else if (draft(); as quiz) {
+  <!-- Quiz metadata summary -->
+  <section class="card bg-base-100 border border-base-200 shadow-xs mb-4 rounded-2xl">
+    <div class="card-body">
+      <label class="form-control w-full">
+        <span class="label-text mb-1">Quiz title</span>
+        <input
+          type="text"
+          class="input input-bordered w-full"
+          [value]="quiz.title"
+          (input)="setTitle($any($event.target).value)"
+          placeholder="Quiz title"
+        />
+      </label>
+
+      <div class="mt-3 flex flex-wrap gap-2">
+        <span class="badge badge-ghost badge-lg">Subject: {{ quiz.subjectName }}</span>
+        <span class="badge badge-primary badge-lg">Difficulty: {{ quiz.difficulty }}</span>
+        <span class="badge badge-outline badge-lg">{{ quiz.questions.length }} questions</span>
+        @if (published()) {
+          <span class="badge badge-success badge-lg">Published</span>
+        } @else {
+          <span class="badge badge-warning badge-lg">Draft</span>
+        }
+      </div>
+
+      @if (saveError()) {
+        <div class="alert alert-error mt-4">
+          <span>{{ saveError() }}</span>
+        </div>
+      }
+
+      <div class="card-actions justify-end mt-4">
+        <button
+          class="btn btn-primary"
+          [disabled]="saving() || quiz.questions.length === 0"
+          (click)="publishQuiz()"
+        >
+          @if (saving()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            Publishing…
+          } @else {
+            Publish Quiz
+          }
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Editable question cards -->
+  <section class="space-y-4">
+    @for (question of quiz.questions; track question.id; let i = $index) {
+      <div class="card bg-base-100 border border-base-200 shadow-xs mb-4 rounded-2xl">
+        <div class="card-body">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium uppercase tracking-wide text-base-content/70">
+              Question {{ i + 1 }}
+            </p>
+            <button
+              class="btn btn-ghost btn-error btn-sm"
+              (click)="deleteQuestion(i)"
+              [attr.aria-label]="'Delete question ' + (i + 1)"
+            >
+              Delete
+            </button>
+          </div>
+
+          <textarea
+            class="textarea textarea-bordered w-full"
+            [value]="question.text"
+            (input)="updateQuestion(i, { text: $any($event.target).value })"
+            rows="2"
+            placeholder="Question text"
+          ></textarea>
+
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+            @for (letter of optionLetters; track $index) {
+              <label class="flex items-start gap-2">
+                <input
+                  type="radio"
+                  class="radio radio-primary radio-sm mt-2"
+                  [name]="'correct-' + question.id"
+                  [value]="letter"
+                  [checked]="question.correctAnswer === letter"
+                  (change)="updateQuestion(i, { correctAnswer: letter })"
+                />
+                <input
+                  type="text"
+                  class="input input-bordered w-full"
+                  [value]="optionText(question, letter)"
+                  [placeholder]="'Option ' + letter + ' text'"
+                  (input)="onOptionInput(i, letter, $any($event.target).value)"
+                />
+              </label>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (quiz.questions.length === 0) {
+      <div class="alert">
+        <span>No questions left. Add more before publishing.</span>
+      </div>
+    }
+  </section>
+}
