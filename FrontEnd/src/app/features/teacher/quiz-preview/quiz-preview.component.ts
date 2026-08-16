@@ -25,6 +25,8 @@ export class QuizPreviewComponent {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly published = signal(false);
+  private readonly dragFromId = signal<number | null>(null);
+  protected readonly dragTarget = signal<number | null>(null);
 
   protected readonly optionLetters: AnswerOption[] = ['A', 'B', 'C', 'D'];
 
@@ -71,6 +73,85 @@ export class QuizPreviewComponent {
   protected onOptionInput(index: number, letter: AnswerOption, value: string): void {
     const key = `option${letter}` as const;
     this.updateQuestion(index, { [key]: value });
+  }
+
+  protected addQuestion(): void {
+    const draft = this.draft();
+    if (!draft) return;
+    const newQuestion: Question = {
+      id: -1, // placeholder
+      quizId: draft.id || 0,
+      text: 'New question',
+      optionA: '',
+      optionB: '',
+      optionC: '',
+      optionD: '',
+      correctAnswer: 'A',
+      createdAt: Date.now().toString(), // convert to string
+      updatedAt: null,
+    };
+    this.draft.set({
+      ...draft,
+      questions: [...draft.questions, newQuestion],
+    });
+  }
+
+  protected dragStart(index: number, event: DragEvent): void {
+    const draft = this.draft();
+    const q = draft?.questions[index];
+    if (!q) return;
+    // Track the dragged question by its stable id, not a drifting index.
+    this.dragFromId.set(q.id);
+    this.dragTarget.set(index);
+    if (event.dataTransfer) {
+      event.dataTransfer.setData('text/plain', String(q.id));
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  protected dragOver(index: number, event: DragEvent): void {
+    // Must preventDefault() on dragover so the browser treats the card as a
+    // valid drop target and keeps firing dragenter.
+    event.preventDefault();
+    const fromId = this.dragFromId();
+    const draft = this.draft();
+    if (fromId === null || !draft) return;
+
+    // Where is the dragged question right now? Recompute each event so the
+    // index never drifts as items reorder live.
+    const currentIndex = draft.questions.findIndex((q) => q.id === fromId);
+    if (currentIndex < 0) return;
+
+    this.dragTarget.set(index);
+
+    // Live-reorder: remove the dragged item and insert at the hovered slot,
+    // so the DOM updates immediately without waiting for `drop` (which is
+    // unreliable over form inputs).
+    if (currentIndex === index) return;
+    const questions = [...draft.questions];
+    const [moved] = questions.splice(currentIndex, 1);
+    questions.splice(index, 0, moved);
+    this.draft.set({ ...draft, questions });
+  }
+
+  protected dragEnd(): void {
+    this.clearDrag();
+  }
+
+  protected dragDrop(event: DragEvent): void {
+    // Called if a native drop still lands; live-reorder already applied the
+    // change during dragover, so just finalize state.
+    event.preventDefault();
+    this.clearDrag();
+  }
+
+  private clearDrag(): void {
+    this.dragFromId.set(null);
+    this.dragTarget.set(null);
+  }
+
+  protected trackByIndex(index: number): number {
+    return index;
   }
 
   protected optionText(question: Question, letter: AnswerOption): string {

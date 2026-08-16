@@ -43,7 +43,13 @@
         </div>
       }
 
-      <div class="card-actions justify-end mt-4">
+      <div class="card-actions justify-end mt-4 gap-2">
+        <button
+          class="btn btn-outline"
+          (click)="addQuestion()"
+        >
+          Add Question
+        </button>
         <button
           class="btn btn-primary"
           [disabled]="saving() || quiz.questions.length === 0"
@@ -62,13 +68,32 @@
 
   <!-- Editable question cards -->
   <section class="space-y-4">
-    @for (question of quiz.questions; track question.id; let i = $index) {
-      <div class="card bg-base-100 border border-base-200 shadow-xs mb-4 rounded-2xl">
+    @for (question of quiz.questions; track $index; let i = $index) {
+      <div
+        class="card bg-base-100 border border-base-200 shadow-xs mb-4 rounded-2xl"
+        [class.border-primary]="dragTarget() === i"
+        [class.opacity-50]="dragTarget() === i"
+        (dragover)="dragOver(i, $event)"
+        (dragenter)="dragOver(i, $event)"
+        (drop)="dragDrop($event)"
+      >
         <div class="card-body">
           <div class="flex items-center justify-between">
-            <p class="text-sm font-medium uppercase tracking-wide text-base-content/70">
-              Question {{ i + 1 }}
-            </p>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs cursor-move"
+                draggable="true"
+                (dragstart)="dragStart(i, $event)"
+                (dragend)="dragEnd()"
+                [attr.aria-label]="'Drag question ' + (i + 1)"
+              >
+                ⠿
+              </button>
+              <p class="text-sm font-medium uppercase tracking-wide text-base-content/70">
+                Question {{ i + 1 }}
+              </p>
+            </div>
             <button
               class="btn btn-ghost btn-error btn-sm"
               (click)="deleteQuestion(i)"
