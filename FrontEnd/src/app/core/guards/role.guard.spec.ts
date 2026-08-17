@@ -1,3 +1,4 @@
+import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, provideRouter, RouterStateSnapshot } from '@angular/router';
 
@@ -17,7 +18,7 @@ function runGuard(...roles: UserRole[]) {
 describe('roleGuard', () => {
   beforeEach(() => {
     localStorage.clear();
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideRouter([])] });
   });
 
   it.each<{ role: UserRole; allowed: UserRole[] }>([
