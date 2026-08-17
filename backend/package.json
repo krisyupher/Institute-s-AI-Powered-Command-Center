@@ -1,0 +1,18 @@
+{
+  "name": "backend-scripts",
+  "version": "1.0.0",
+  "description": ".NET backend helper scripts",
+  "scripts": {
+    "start": "dotnet run",
+    "build": "dotnet build",
+    "test": "dotnet test",
+    "db-reset": "rm -f AiInstituteManager.API/institute.db && dotnet ef database update",
+    "db-migrate": "dotnet ef database update",
+    "db-seed": "dotnet ef database update",
+    "swagger": "start http://localhost:5133/swagger",
+    "dev": "dotnet run"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.0"
+  }
+}

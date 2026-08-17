@@ -42,6 +42,14 @@ export const routes: Routes = [
                 (m) => m.QuizListComponent,
               ),
           },
+          {
+            path: 'preview',
+            title: 'Preview quiz',
+            loadComponent: () =>
+              import('./features/teacher/quiz-preview/quiz-preview.component').then(
+                (m) => m.QuizPreviewComponent,
+              ),
+          },
         ],
       },
 
