@@ -1,21 +1,46 @@
-using System.Text;
+using AiInstituteManager.API.Extensions;
 using AiInstituteManager.Domain.Entities;
 using AiInstituteManager.Domain.Enums;
-using AiInstituteManager.Infrastructure.Identity;
 using AiInstituteManager.Infrastructure.Extensions;
+using AiInstituteManager.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using AiInstituteManager.API.Extensions;
+using Microsoft.OpenApi;
+using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' followed by a space and your JWT token, e.g. \"Bearer eyJhbGci...\""
+    });
+
+    // AddSecurityRequirement now takes a delegate that receives the
+    // in-progress OpenApiDocument, because OpenApiSecuritySchemeReference
+    // needs to resolve against it — this is the new pattern for
+    // Swashbuckle 10.x / Microsoft.OpenApi 2.x.
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+    });
+});
+
+
 
 // One line pulls in DbContext + generic repositories + UnitOfWork.
 // See: AiInstituteManager.Infrastructure/Extensions/ServiceCollectionExtensions.cs
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddQuizGeneration();
 
 // Authentication: tells ASP.NET Core HOW to validate a token presented on
 // an incoming request. This is the mirror image of JwtTokenService, which
