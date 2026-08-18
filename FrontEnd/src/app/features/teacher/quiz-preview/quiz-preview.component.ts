@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import {
   AnswerOption,
   CreateQuestionRequest,
-  GeneratedQuestion,
   Question,
   QuizDraft,
   SaveQuizRequest,
@@ -13,7 +12,7 @@ import { QuizService } from '../../../core/services/quiz.service';
 
 @Component({
   selector: 'app-quiz-preview',
-  imports: [],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'quiz-preview.component.html',
   styleUrl: 'quiz-preview.component.scss',
@@ -24,6 +23,7 @@ export class QuizPreviewComponent {
 
   protected readonly draft = signal<QuizDraft | null>(null);
   protected readonly loading = signal(true);
+  protected readonly isFallbackData = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
@@ -34,53 +34,25 @@ export class QuizPreviewComponent {
   protected readonly optionLetters: AnswerOption[] = ['A', 'B', 'C', 'D'];
 
   constructor() {
-    const state = this.router.getCurrentNavigation()?.extras.state as
-      | {
-          title?: string;
-          subjectId?: number;
-          subjectName?: string;
-          difficulty?: string;
-          questions?: GeneratedQuestion[];
-        }
-      | undefined;
+    // Prefer a freshly generated quiz handed over by the generator via router
+    // state (Ticket 3.3). `history.state` survives an in-tab refresh; navigation
+    // extras do not, so read the persisted pushState object directly.
+    const stateQuizDraft = (window.history.state as
+      | { quizDraft?: QuizDraft }
+      | null)?.quizDraft;
 
-    // Prefer a freshly generated quiz handed over by the generator component
-    // via router state; fall back to the mock draft for direct navigation.
-    if (state?.questions?.length) {
-      const draft: QuizDraft = {
-        id: -1,
-        title: state.title ?? 'Untitled quiz',
-        isPublished: false,
-        subjectId: state.subjectId ?? 1,
-        createdByTeacherId: 1,
-        questions: state.questions.map(
-          (q, index): Question => ({
-            id: -1, // placeholder until saved by POST /api/quiz/save
-            quizId: -1,
-            text: q.text,
-            optionA: q.optionA,
-            optionB: q.optionB,
-            optionC: q.optionC,
-            optionD: q.optionD,
-            correctAnswer: q.correctAnswer,
-            createdAt: new Date().toISOString(),
-            updatedAt: null,
-          }),
-        ),
-        results: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: null,
-        difficulty: (state.difficulty as QuizDraft['difficulty']) ?? 'Medium',
-        subjectName: state.subjectName ?? 'Unknown subject',
-      };
-      this.draft.set(draft);
+    if (stateQuizDraft?.questions?.length) {
+      this.draft.set(stateQuizDraft);
       this.loading.set(false);
       return;
     }
 
+    // No generator state (e.g. reached via the dashboard "Review Draft" button
+    // or a hard refresh): serve the mock draft so the screen never breaks.
     this.api.getDraftQuiz().subscribe({
       next: (draft) => {
         this.draft.set(draft);
+        this.isFallbackData.set(true);
         this.loading.set(false);
       },
       error: () => {
@@ -244,11 +216,18 @@ export class QuizPreviewComponent {
         this.published.set(true);
         this.saving.set(false);
         this.draft.set({ ...draft, isPublished: true });
+        // Back to the teacher's quiz list once the publish succeeds.
+        this.router.navigate(['/teacher/quizzes']);
       },
       error: () => {
         this.saveError.set('Could not publish the quiz. Please try again.');
         this.saving.set(false);
       },
     });
+  }
+
+  /** Leave the editor without saving; return to the generator. */
+  protected cancel(): void {
+    this.router.navigate(['/teacher/generator']);
   }
 }

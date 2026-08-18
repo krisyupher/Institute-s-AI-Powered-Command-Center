@@ -1,8 +1,13 @@
-<header class="mb-6">
-  <h1 class="text-2xl font-semibold">Preview &amp; Edit Quiz</h1>
-  <p class="mt-1 text-base-content/70">
-    Review the AI draft below. Edit any question or option, then publish when satisfied.
-  </p>
+<header class="mb-6 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-semibold">Preview &amp; Edit Quiz</h1>
+    <p class="mt-1 text-base-content/70">
+      Review the AI draft below. Edit any question or option, then publish when satisfied.
+    </p>
+  </div>
+  <a class="btn btn-ghost btn-sm" routerLink="/teacher/generator">
+    ← Back to Generator
+  </a>
 </header>
 
 @if (loading()) {
@@ -12,6 +17,27 @@
     <span>{{ error() }}</span>
   </div>
 } @else if (draft(); as quiz) {
+  @if (isFallbackData()) {
+    <div class="alert alert-info shadow-xs mb-6 text-sm" role="status">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        class="stroke-current shrink-0 w-5 h-5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path>
+      </svg>
+      <span>
+        Loaded fallback demo draft. Generate a new quiz from the AI Generator for dynamic results.
+      </span>
+    </div>
+  }
+
   <!-- Quiz metadata summary -->
   <section class="card bg-base-100 border border-base-200 shadow-xs mb-4 rounded-2xl">
     <div class="card-body">
@@ -43,24 +69,12 @@
         </div>
       }
 
-      <div class="card-actions justify-end mt-4 gap-2">
+      <div class="card-actions justify-end mt-4">
         <button
-          class="btn btn-outline"
+          class="btn btn-outline btn-sm"
           (click)="addQuestion()"
         >
           Add Question
-        </button>
-        <button
-          class="btn btn-primary"
-          [disabled]="saving() || quiz.questions.length === 0"
-          (click)="publishQuiz()"
-        >
-          @if (saving()) {
-            <span class="loading loading-spinner loading-sm"></span>
-            Publishing…
-          } @else {
-            Publish Quiz
-          }
         </button>
       </div>
     </div>
@@ -117,7 +131,7 @@
                 <input
                   type="radio"
                   class="radio radio-primary radio-sm mt-2"
-                  [name]="'correct-' + question.id"
+                  [name]="'correct-' + i"
                   [value]="letter"
                   [checked]="question.correctAnswer === letter"
                   (change)="updateQuestion(i, { correctAnswer: letter })"
@@ -142,4 +156,21 @@
       </div>
     }
   </section>
+
+  <!-- Footer actions: discard the draft or publish the final quiz -->
+  <div class="sticky bottom-0 z-10 mt-6 flex items-center justify-end gap-2 border-t border-base-200 bg-base-100/95 p-4 backdrop-blur">
+    <button class="btn btn-ghost" (click)="cancel()">Discard</button>
+    <button
+      class="btn btn-primary"
+      [disabled]="saving() || quiz.questions.length === 0"
+      (click)="publishQuiz()"
+    >
+      @if (saving()) {
+        <span class="loading loading-spinner loading-sm"></span>
+        Publishing…
+      } @else {
+        Publish Quiz
+      }
+    </button>
+  </div>
 }
