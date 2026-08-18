@@ -58,17 +58,17 @@ describe('AuthService', () => {
     expect(auth.homeRoute()).toBe('/dashboard/teacher');
   });
 
-  it('falls back to a mock token when the endpoint does not exist yet', async () => {
+  it('propagates an unreachable backend as a real error instead of faking a session', async () => {
     const { auth, backend } = setup();
 
-    const pending = new Promise((resolve) => auth.login(CREDENTIALS).subscribe(resolve));
-    backend
-      .expectOne(`${environment.apiBaseUrl}/api/auth/login`)
-      .flush('Not Found', { status: 404, statusText: 'Not Found' });
-    await pending;
+    const failure = new Promise((resolve) =>
+      auth.login(CREDENTIALS).subscribe({ error: resolve }),
+    );
+    backend.expectOne(`${environment.apiBaseUrl}/api/auth/login`).error(new ProgressEvent('error'));
+    await failure;
 
-    expect(auth.isAuthenticated()).toBe(true);
-    expect(auth.role()).toBe('Teacher');
+    expect(auth.isAuthenticated()).toBe(false);
+    expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
 
   it('propagates a rejected credential instead of faking a session', async () => {

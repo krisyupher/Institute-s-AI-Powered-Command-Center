@@ -19,37 +19,56 @@ backend/    .NET 10 solution (AiInstituteManager.slnx): API / Infrastructure / D
 docs/       PROJECT_PLAN.md — the contract of record for schema, DTOs, endpoints
 ```
 
-There is **no root `package.json`**. All npm commands run from `FrontEnd/`; all dotnet
-commands run from `backend/`.
+There is **no root `package.json`**. `FrontEnd/package.json` is the real npm project;
+`backend/package.json` is a thin `npm run` wrapper around the dotnet commands below (see
+the Backend commands note) — neither lives at the repo root.
 
 ## CURRENT STATE (read this before assuming a feature exists)
 
-The two halves are not yet connected, and each is only partly built:
+Auth is real and wired end to end; quiz/admin data is still mocked:
 
-- **No HTTP calls anywhere in the frontend.** Every "client" service
-  ([auth.service.ts](FrontEnd/src/app/core/services/auth.service.ts),
-  [quiz.service.ts](FrontEnd/src/app/core/services/quiz.service.ts),
+- **Auth is live.** [AuthController](backend/AiInstituteManager.API/Contollers/AuthController.cs)
+  (`POST /api/auth/register`, `/login`, `GET /api/auth/me`) is implemented on top of
+  ASP.NET Identity's `UserManager`/`SignInManager` + `JwtTokenService`, and
+  `Program.cs` calls `await app.ApplyDbMigrationsAndSeedAsync();` on startup, so migrations
+  run and demo accounts exist before the first request.
+  [AuthService.login()](FrontEnd/src/app/core/services/auth.service.ts) makes a real
+  `HttpClient.post` to `${environment.apiBaseUrl}/api/auth/login`; a functional
+  [authInterceptor](FrontEnd/src/app/core/interceptors/auth.interceptor.ts) (registered in
+  `app.config.ts`) attaches `Authorization: Bearer <token>` to every other outgoing
+  request. `AuthService.session`/`isAuthenticated`/`role` are all `computed()` from
+  decoding the JWT in `localStorage` (`core/auth/jwt.ts`) — there is no separate
+  "logged in" flag to fall out of sync.
+  - There is no mock-auth fallback and no demo role-switcher anymore — both were removed
+    once real login shipped, because they fabricated a signed-in identity without ever
+    calling the backend. `AuthService.login()` only ever succeeds via a real
+    `POST /api/auth/login` against the database; any failure (bad credentials, unreachable
+    API) propagates to the caller as a real error. `AuthService.setRole()` still exists but
+    is a **test-only** helper now (mints a session locally so specs don't need to mock
+    HTTP) — nothing in the production UI calls it.
+  - CORS is configured via [CorsExtensions.cs](backend/AiInstituteManager.API/Extensions/CorsExtensions.cs)
+    (`Cors:AllowedOrigins` in `appsettings.json`, defaults to `http://localhost:4200`).
+    `environment.apiBaseUrl` points at the HTTPS profile (`https://localhost:7083`)
+    directly rather than the HTTP one — the API calls `UseHttpsRedirection()`, so hitting
+    HTTP just 307-redirects, and CORS preflights don't reliably survive a redirect.
+- **Quiz and admin data are still fully mocked.** `QuizService`, `AdminService`, and
+  `DashboardApi`
+  ([quiz.service.ts](FrontEnd/src/app/core/services/quiz.service.ts),
   [admin.service.ts](FrontEnd/src/app/core/services/admin.service.ts),
-  [dashboard.api.ts](FrontEnd/src/app/core/api/dashboard.api.ts)) returns
-  `of(MOCK…).pipe(delay(250))`. Method signatures deliberately match the endpoints in
-  `docs/PROJECT_PLAN.md` so wiring the real API means swapping the body for `this.http.*`
-  with no caller changes — **preserve those signatures**.
-- **The backend has no controllers, no auth, and no AI service.** It is currently
-  DbContext + entity configurations + generic repository/UnitOfWork + seeding.
-  `AddInfrastructure` and `MapControllers` are wired, but there is nothing to map yet.
-- **Seeding is written but not invoked.** `ApplyMigrationsAndSeedAsync` exists in
-  [DatabaseSeedingExtensions.cs](backend/AiInstituteManager.API/Extensions/DatabaseSeedingExtensions.cs)
-  and is not called from [Program.cs](backend/AiInstituteManager.API/Program.cs). Adding
-  `await app.ApplyMigrationsAndSeedAsync();` after `var app = builder.Build();` is the
-  intended hook-up.
-- **Most feature components are placeholders** rendering `<app-placeholder-page>`; the
-  routing skeleton, layout shell, and role guard are real.
-- `AuthService.isAuthenticated` is hardcoded `true` and the "role" is a value in
-  `localStorage` (`institute.mockRole`) switched from the header — a demo affordance, not
-  authentication. `roleGuard` is real logic sitting on top of that stub.
-- **`README.md` describes a different project** (`BackEnd/src/Institute.Api`, `DataBase/`,
-  `Documentation/`, a Claude-backed AI assistant, SQLite). None of those paths exist here.
-  Trust `docs/PROJECT_PLAN.md` and the code over the README.
+  [dashboard.api.ts](FrontEnd/src/app/core/api/dashboard.api.ts)) all return
+  `of(MOCK…).pipe(delay(250))` with no `HttpClient` calls. Method signatures deliberately
+  match the endpoints in `docs/PROJECT_PLAN.md`, so wiring the real API means swapping the
+  body for `this.http.*` with no caller changes — **preserve those signatures**.
+- **The backend has controllers only for auth.** Quiz/admin endpoints from
+  `docs/PROJECT_PLAN.md` (`/api/quiz/*`, `/api/admin/*`) and the Azure OpenAI integration
+  are not implemented yet — Domain/Infrastructure (entities, EF configs, generic
+  repository/UnitOfWork, seeding) are in place underneath where those controllers will go.
+- **Most feature components are placeholders** rendering `<app-placeholder-page>`
+  (teacher quiz generator/list, student quiz flows, admin dashboard page); the routing
+  skeleton, layout shell, role guard, and login page are real.
+- **`README.md` describes a different project layout** (`BackEnd/src/Institute.Api`,
+  `DataBase/`, `Documentation/`, a Claude-backed AI assistant, SQLite). None of those paths
+  exist here. Trust `docs/PROJECT_PLAN.md` and the code over the README.
 
 ## COMMANDS
 
@@ -88,6 +107,13 @@ claiming backend test coverage.
 
 Default connection string is SQL Server LocalDB
 (`Server=(localdb)\mssqllocaldb;Database=AiInstituteManagerDb`), not Azure SQL yet.
+
+`backend/package.json` wraps the above as `npm start`/`npm run build`/`npm run test`/
+`npm run db-migrate`, so `README.md`'s "simple method" still works. Its `db-reset` script
+(`rm -f AiInstituteManager.API/institute.db && dotnet ef database update`) is stale: it
+targets a SQLite file left over from an earlier design, but the live connection string is
+LocalDB, so the delete is a no-op — use `dotnet ef database update` (or drop the LocalDB
+database) to actually reset state.
 
 ## ARCHITECTURE
 
@@ -129,6 +155,12 @@ Conventions that make new entities nearly free:
   constructor injection, inline `template:` strings, signals for state.
 - `provideRouter(routes, withComponentInputBinding())` — route params such as `:quizId`
   bind straight to component inputs; do not inject `ActivatedRoute` to read them.
+- Auth state lives entirely in `AuthService`, derived from the JWT: the token is the only
+  thing stored (`localStorage`, key `institute.jwt`), and `session`/`isAuthenticated`/
+  `role`/`user` are all `computed()` off decoding it — never set independently. Outgoing
+  requests get their `Authorization` header from the functional `authInterceptor`
+  (registered via `provideHttpClient(withInterceptors([authInterceptor]))`), not from
+  individual services.
 - `core/` holds cross-cutting concerns (layout shell, guards, models, mock data, service
   clients); `features/` holds lazy-loaded pages; `shared/` holds reusable presentational
   pieces. Everything under `features/` is loaded with `loadComponent`; only the layout

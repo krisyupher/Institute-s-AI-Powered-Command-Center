@@ -54,6 +54,9 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddQuizGeneration();
 
+// Lets the Angular dev server (a different origin) call this API.
+builder.Services.AddFrontendCors(builder.Configuration);
+
 // Authentication: tells ASP.NET Core HOW to validate a token presented on
 // an incoming request. This is the mirror image of JwtTokenService, which
 // only CREATES tokens — this is what checks them.
@@ -95,9 +98,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-// Must run before UseAuthentication/UseAuthorization so the CORS policy
-// applies to preflight requests.
-app.UseCors("AngularApp");
+app.UseCors(CorsExtensions.FrontendPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

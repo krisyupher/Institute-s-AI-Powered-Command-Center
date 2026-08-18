@@ -11,8 +11,6 @@ import { UserRole } from './core/models/user.model';
 
 /** Ticket 1.5 acceptance criteria: every defined URL loads its placeholder page. */
 const CASES: ReadonlyArray<{ url: string; expect: string; role: UserRole }> = [
-  { url: '/login', expect: 'Login Coming Soon', role: 'Student' },
-  { url: '/teacher/generator', expect: 'Teacher Quiz Generator Coming Soon', role: 'Teacher' },
   { url: '/teacher/quizzes', expect: 'Teacher Quiz List Coming Soon', role: 'Teacher' },
   { url: '/student/quizzes', expect: 'Student Quiz List Coming Soon', role: 'Student' },
   { url: '/student/quizzes/42', expect: 'Take Quiz Coming Soon', role: 'Student' },
@@ -36,6 +34,25 @@ describe('app routes', () => {
       expect(harness.routeNativeElement?.textContent).toContain(testCase.expect);
     });
   }
+
+  /** Ticket 2.5: /login now loads the real sign-in form, not a placeholder. */
+  it('loads the sign-in form for /login', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/login');
+    const text = harness.routeNativeElement?.textContent ?? '';
+    expect(text).toContain('Sign in');
+    expect(harness.routeNativeElement?.querySelector('input[type="email"]')).toBeTruthy();
+  });
+
+  /** Ticket 3.3: /teacher/generator now loads the real quiz criteria form. */
+  it('loads the quiz generator form for /teacher/generator', async () => {
+    TestBed.inject(AuthService).setRole('Teacher');
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/teacher/generator');
+    const text = harness.routeNativeElement?.textContent ?? '';
+    expect(text).toContain('AI Quiz Generator');
+    expect(harness.routeNativeElement?.querySelector('select[formcontrolname="subjectId"]')).toBeTruthy();
+  });
 
   it('binds the route param to the take-quiz page', async () => {
     TestBed.inject(AuthService).setRole('Student');

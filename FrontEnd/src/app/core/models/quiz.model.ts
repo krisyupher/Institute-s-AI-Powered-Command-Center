@@ -57,6 +57,7 @@ export interface QuizResult {
 
 /** Request payload for `POST /api/quiz/generate`. */
 export interface GenerateQuizRequest {
+  subjectId: number;
   topic: string;
   difficulty: QuizDifficulty;
   questionCount: number;
