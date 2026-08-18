@@ -1,6 +1,8 @@
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable, delay, of, throwError } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
 import {
   MOCK_AVAILABLE_QUIZZES,
   MOCK_QUIZ_RESULTS,
@@ -9,7 +11,7 @@ import {
 } from '../mock/mock-data';
 import {
   AvailableQuiz,
-  CreateQuestionRequest,
+  GeneratedQuestion,
   GenerateQuizRequest,
   Question,
   Quiz,
@@ -22,50 +24,38 @@ import {
   Subject,
 } from '../models/quiz.model';
 
-// Builds a fresh draft question from the raw generator payload
-function draftQuestion(quizId: number, index: number): Question {
-  return {
-    id: -1, // negative placeholder until saved by `POST /api/quiz/save`
-    quizId,
-    text: `Draft question ${index + 1} about the requested topic.`,
-    optionA: 'Option A',
-    optionB: 'Option B',
-    optionC: 'Option C',
-    optionD: 'Option D',
-    correctAnswer: 'A',
-    createdAt: new Date().toISOString(),
-    updatedAt: null,
-  };
-}
-
-/**
- * Quiz client. Currently serves mock data; the method signatures match
- * `GET/POST /api/quiz/*` from docs/PROJECT_PLAN.md, so wiring the real API
- * means replacing each body with `this.http.*` and nothing in callers changes.
- */
+// Quiz client. generateQuiz/saveQuiz hit the live backend (/api/quiz);
+// the remaining methods serve mock data because those endpoints are not
+// implemented on the backend yet. Signatures match docs/PROJECT_PLAN.md.
 @Injectable({ providedIn: 'root' })
 export class QuizService {
+  private readonly http = inject(HttpClient);
+  // Absolute origin (same as auth.service) — a relative /api path would resolve
+  // against the SPA's own dev-server origin (:4200) and 404.
+  private readonly baseUrl = `${environment.apiBaseUrl}/api/quiz`;
   private static readonly latencyMs = 250;
 
-  // Lists published quizzes for students
+  // POST /api/quiz/generate — real backend call; returns raw AI questions
+  generateQuiz(request: GenerateQuizRequest): Observable<GeneratedQuestion[]> {
+    return this.http.post<GeneratedQuestion[]>(`${this.baseUrl}/generate`, request);
+  }
+
+  // POST /api/quiz/save — real backend call; persists the edited quiz
+  saveQuiz(request: SaveQuizRequest): Observable<SaveQuizResponse> {
+    return this.http.post<SaveQuizResponse>(`${this.baseUrl}/save`, request);
+  }
+
+  // Lists published quizzes for students (backend GET /available pending)
   getAvailableQuizzes(): Observable<AvailableQuiz[]> {
     return of(MOCK_AVAILABLE_QUIZZES).pipe(delay(QuizService.latencyMs));
   }
 
-  // Returns one quiz by id (for teachers reviewing full drafts)
+  // Returns one quiz by id (backend GET /{id} pending)
   getQuizById(id: number): Observable<Quiz | undefined> {
     return of(MOCK_QUIZZES.find((q) => q.id === id)).pipe(delay(QuizService.latencyMs));
   }
 
-  // Requests `POST /api/quiz/generate`; returns raw draft questions
-  generateQuiz(request: GenerateQuizRequest): Observable<Question[]> {
-    const drafts = Array.from({ length: request.questionCount }, (_, i) =>
-      draftQuestion(-1, i),
-    );
-    return of(drafts).pipe(delay(QuizService.latencyMs));
-  }
-
-  // Accepts student answers, evaluates them, records a `QuizResult`
+  // Accepts student answers, evaluates them, records a QuizResult (backend pending)
   submitQuiz(request: SubmitQuizRequest): Observable<SubmitQuizResponse> {
     const quiz = MOCK_QUIZZES.find((q) => q.id === request.quizId);
     if (!quiz) {
@@ -89,8 +79,9 @@ export class QuizService {
   }
 
   // Returns the teacher's in-progress draft quiz (unpublished) for the
-  // preview-and-edit screen (Ticket 3.4). Mirrors `GET /api/quiz/{id}` for
-  // a draft; enriched with display-only difficulty + subject name.
+  // preview-and-edit screen (Ticket 3.4). Mock fallback: the backend has no
+  // GET draft endpoint, so a generated quiz is normally handed to the
+  // preview via router state instead. Used only when navigating directly.
   getDraftQuiz(): Observable<QuizDraft> {
     const draft = MOCK_QUIZZES.find((q) => q.id === 3 && !q.isPublished);
     if (!draft) {
@@ -105,52 +96,17 @@ export class QuizService {
     return of(quizDraft).pipe(delay(QuizService.latencyMs));
   }
 
-  /**
-   * Saves a teacher-approved/edited quiz via `POST /api/quiz/save`.
-   * `isPublished: true` marks the draft as published (Ticket 3.4 human-in-
-   * the-loop flow). Selectively mocks persistence into the in-memory list
-   * so `getTeacherQuizzes()` reflects a freshly saved quiz.
-   */
-  saveQuiz(request: SaveQuizRequest): Observable<SaveQuizResponse> {
-    const now = new Date().toISOString();
-    const savedId = MOCK_QUIZZES.length + 1;
-    const saved: Quiz = {
-      id: savedId,
-      title: request.title,
-      isPublished: request.isPublished,
-      subjectId: request.subjectId,
-      createdByTeacherId: 1, // mock teacher (Elena Rivera)
-      questions: request.questions.map((q: CreateQuestionRequest, index) => ({
-        id: savedId * 100 + index + 1,
-        quizId: savedId,
-        text: q.text,
-        optionA: q.optionA,
-        optionB: q.optionB,
-        optionC: q.optionC,
-        optionD: q.optionD,
-        correctAnswer: q.correctAnswer,
-        createdAt: now,
-        updatedAt: null,
-      })),
-      results: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    MOCK_QUIZZES.push(saved);
-    return of(saved).pipe(delay(QuizService.latencyMs));
-  }
-
-  // Returns the calling student's past results
+  // Returns the calling student's past results (backend pending)
   getStudentResults(): Observable<QuizResult[]> {
     return of(MOCK_QUIZ_RESULTS).pipe(delay(QuizService.latencyMs));
   }
 
-  // Returns full quiz entities (for a teacher's quiz list / management view)
+  // Returns full quiz entities for a teacher's quiz list (backend pending)
   getTeacherQuizzes(): Observable<Quiz[]> {
     return of(MOCK_QUIZZES).pipe(delay(QuizService.latencyMs));
   }
 
-  // Returns the subject breakdown used by the admin analytics dashboard
+  // Returns the subject breakdown for the admin analytics dashboard (backend pending)
   getSubjectStats(): Observable<Subject[]> {
     return of(MOCK_SUBJECTS).pipe(delay(QuizService.latencyMs));
   }
