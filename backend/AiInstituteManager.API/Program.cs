@@ -13,6 +13,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// The Angular SPA (dev server on :4200) calls the API cross-origin. Without
+// CORS the browser blocks every request — including /api/auth/login — so the
+// SPA could never obtain a real JWT. Allow the dev origin explicitly rather
+// than open:true; production serves the SPA from the same origin as the API.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularApp", policy =>
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -83,6 +95,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+// Must run before UseAuthentication/UseAuthorization so the CORS policy
+// applies to preflight requests.
+app.UseCors("AngularApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
