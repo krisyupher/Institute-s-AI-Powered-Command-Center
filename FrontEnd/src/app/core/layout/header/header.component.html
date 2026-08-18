@@ -4,17 +4,6 @@
   </div>
 
   <div class="navbar-end gap-3">
-    <select
-      class="select select-bordered select-sm"
-      [value]="role()"
-      (change)="switchRole($any($event.target).value)"
-      aria-label="Demo role"
-    >
-      @for (option of roles; track option) {
-        <option [value]="option">{{ option }}</option>
-      }
-    </select>
-
     <div class="flex items-center gap-3">
       <div class="avatar placeholder">
         <div class="bg-primary text-primary-content rounded-full w-10 h-10 flex items-center justify-center font-semibold">
@@ -26,5 +15,9 @@
         <span class="badge badge-primary badge-sm">{{ role() }}</span>
       </div>
     </div>
+
+    @if (isAuthenticated()) {
+      <button type="button" class="btn btn-ghost btn-sm" (click)="signOut()">Sign out</button>
+    }
   </div>
 </header>

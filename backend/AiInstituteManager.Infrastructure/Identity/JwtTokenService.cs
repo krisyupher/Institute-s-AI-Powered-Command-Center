@@ -36,8 +36,12 @@ namespace AiInstituteManager.Infrastructure.Identity
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-                new(JwtRegisteredClaimNames.Name, user.UserName ?? string.Empty),
-                new(JwtRegisteredClaimNames.Name, user.FullName ?? string.Empty),
+                // The frontend reads the display name off "unique_name" (see
+                // FrontEnd/src/app/core/auth/jwt.ts) — this used to be two
+                // claims both typed "name" (username then full name), which
+                // collapses into a JWT array and makes the client pick the
+                // username instead of the full name.
+                new(JwtRegisteredClaimNames.UniqueName, user.FullName ?? string.Empty),
                 new(ClaimTypes.Role, user.Role.ToString()),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };

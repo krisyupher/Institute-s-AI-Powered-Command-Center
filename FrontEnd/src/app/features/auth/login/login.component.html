@@ -1,0 +1,61 @@
+<div class="flex min-h-[70vh] items-center justify-center px-4">
+  <div class="card w-full max-w-sm bg-base-100 border border-base-200 shadow-xs rounded-2xl">
+    <div class="card-body">
+      <h1 class="text-2xl font-semibold text-center">Sign in</h1>
+      <p class="mt-1 text-center text-sm text-base-content/70">Institute AI Manager</p>
+
+      <form class="mt-4 flex flex-col gap-3" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <label class="form-control w-full">
+          <span class="label-text mb-1">Email</span>
+          <input
+            type="email"
+            formControlName="email"
+            class="input input-bordered w-full"
+            [class.input-error]="email.invalid && email.touched"
+            placeholder="you@institute.edu"
+            autocomplete="email"
+          />
+          @if (email.invalid && email.touched) {
+            <span class="label-text-alt mt-1 text-error">
+              @if (email.hasError('required')) {
+                Email is required.
+              } @else if (email.hasError('email')) {
+                Enter a valid email address.
+              }
+            </span>
+          }
+        </label>
+
+        <label class="form-control w-full">
+          <span class="label-text mb-1">Password</span>
+          <input
+            type="password"
+            formControlName="password"
+            class="input input-bordered w-full"
+            [class.input-error]="password.invalid && password.touched"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+          @if (password.invalid && password.touched) {
+            <span class="label-text-alt mt-1 text-error">Password is required.</span>
+          }
+        </label>
+
+        @if (error()) {
+          <div class="alert alert-error">
+            <span>{{ error() }}</span>
+          </div>
+        }
+
+        <button type="submit" class="btn btn-primary mt-2" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            Signing in…
+          } @else {
+            Sign in
+          }
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

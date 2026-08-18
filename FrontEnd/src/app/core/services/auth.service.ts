@@ -1,6 +1,6 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, catchError, delay, map, of, tap, throwError } from 'rxjs';
+import { Observable, map, of, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { decodeSession, mintMockToken } from '../auth/jwt';
@@ -10,9 +10,6 @@ import { User, UserRole } from '../models/user.model';
 
 /** localStorage key holding the raw JWT. */
 export const TOKEN_KEY = 'institute.jwt';
-
-/** Latency the mock-auth fallback simulates, matching the other mock services. */
-const MOCK_LATENCY_MS = 250;
 
 /** Rendered by the shell while signed out, so the header never shows a stale identity. */
 const GUEST: User = {
@@ -70,25 +67,16 @@ export class AuthService {
   }
 
   /**
-   * `POST /api/auth/login`. On success the returned JWT is stored and the session state
-   * updates immediately.
-   *
-   * While `environment.useMockAuth` is on, a transport-level failure (the endpoint does
-   * not exist until backend Ticket 2.2) falls back to a locally minted mock token so the
-   * app remains usable. Credential rejections (401/400) are never faked — those are a
-   * real answer from a real API.
+   * `POST /api/auth/login` against the real database. On success the returned JWT is
+   * stored and the session state updates immediately; any failure (bad credentials,
+   * unreachable API, whatever) propagates to the caller as-is — this never fabricates a
+   * session, so a signed-in user is always one the backend actually authenticated.
    */
   login(credentials: LoginRequest): Observable<User> {
     return this.http
       .post<LoginResponse>(`${environment.apiBaseUrl}/api/auth/login`, credentials)
       .pipe(
         map((response) => response.token),
-        catchError((error: HttpErrorResponse) => {
-          if (environment.useMockAuth && isEndpointUnavailable(error)) {
-            return mockLogin(credentials);
-          }
-          return throwError(() => error);
-        }),
         tap((token) => this.storeToken(token)),
         map(() => this.user()),
       );
@@ -105,11 +93,12 @@ export class AuthService {
   }
 
   /**
-   * Demo affordance kept from the shell: signs in as the mock user for `role` without a
-   * login round-trip, so the header's role switch keeps working before the login UI
-   * (Ticket 2.5) and the backend auth endpoints exist. It mints a real session rather
-   * than faking a flag, so guards and the interceptor exercise the same code path as a
-   * genuine sign-in.
+   * Test-only helper: signs in as the mock user for `role` without a login round-trip, so
+   * specs can set up an authenticated session in one call instead of mocking an HTTP
+   * request. Not called from any production UI — the real app only ever authenticates
+   * through `login()` against the database. Kept on the service (rather than test-only
+   * code) because it mints a real, decodable session, so guards and the interceptor
+   * exercise the exact same code path a genuine sign-in would.
    */
   setRole(role: UserRole): void {
     const user = MOCK_USERS.find((candidate) => candidate.role === role);
@@ -131,23 +120,4 @@ function readStoredToken(): string | null {
   // during service construction.
   const token = localStorage.getItem(TOKEN_KEY);
   return token && decodeSession(token) ? token : null;
-}
-
-/**
- * True when the request never reached a working endpoint — the API is down (status 0) or
- * the route does not exist yet (404). A 401/400 means the API answered, so it stands.
- */
-function isEndpointUnavailable(error: HttpErrorResponse): boolean {
-  return error.status === 0 || error.status === 404;
-}
-
-/** Dev-only stand-in for `POST /api/auth/login`; emits a mock JWT for the given email. */
-function mockLogin(credentials: LoginRequest): Observable<string> {
-  const user = MOCK_USERS.find(
-    (candidate) => candidate.email.toLowerCase() === credentials.email.trim().toLowerCase(),
-  );
-  if (!user) {
-    return throwError(() => new Error('Invalid email or password.'));
-  }
-  return of(mintMockToken(user)).pipe(delay(MOCK_LATENCY_MS));
 }

@@ -2,12 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
-import { UserRole } from '../../models/user.model';
 
 /**
  * Top navigation bar for the shell: brand link plus the signed-in user's profile
- * badge (avatar + role tag). The role-switch dropdown is a mock-auth affordance kept
- * from the temporary shell so the demo can still flip between roles.
+ * badge (avatar + role tag), sourced entirely from the JWT the backend issued — there is
+ * no way to change identity from this component other than signing in or out for real.
  */
 @Component({
   selector: 'app-header',
@@ -22,7 +21,7 @@ export class HeaderComponent {
 
   protected readonly user = this.auth.user;
   protected readonly role = this.auth.role;
-  protected readonly roles: readonly UserRole[] = ['Student', 'Teacher', 'Admin'];
+  protected readonly isAuthenticated = this.auth.isAuthenticated;
 
   /** Initials for the avatar placeholder, e.g. "Elena Rivera" -> "ER". */
   protected readonly initials = computed(() =>
@@ -33,9 +32,8 @@ export class HeaderComponent {
       .join(''),
   );
 
-  /** Demo role switch: change the role, then land on that role's dashboard. */
-  protected switchRole(role: UserRole): void {
-    this.auth.setRole(role);
-    void this.router.navigateByUrl(this.auth.homeRoute());
+  protected signOut(): void {
+    this.auth.logout();
+    void this.router.navigateByUrl('/login');
   }
 }
