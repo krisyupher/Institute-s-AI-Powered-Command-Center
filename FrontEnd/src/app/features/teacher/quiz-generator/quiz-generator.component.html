@@ -1,0 +1,110 @@
+<header class="mb-6">
+  <h1 class="text-2xl font-semibold">AI Quiz Generator</h1>
+  <p class="mt-1 text-base-content/70">
+    Set the criteria below and let AI draft a quiz. You'll review and edit every question
+    before it's published.
+  </p>
+</header>
+
+<section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl max-w-2xl">
+  <div class="card-body">
+    <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="form-control w-full">
+        <span class="label-text mb-1">Subject</span>
+        <select
+          class="select select-bordered w-full"
+          formControlName="subjectId"
+          [class.select-error]="subjectId.invalid && subjectId.touched"
+        >
+          <option [ngValue]="null" disabled>Select a subject</option>
+          @for (subject of subjects(); track subject.id) {
+            <option [ngValue]="subject.id">{{ subject.name }} ({{ subject.code }})</option>
+          }
+        </select>
+        @if (loadingSubjects()) {
+          <span class="label-text-alt mt-1 text-base-content/60">Loading subjects…</span>
+        } @else if (subjectsError()) {
+          <span class="label-text-alt mt-1 text-error">{{ subjectsError() }}</span>
+        } @else if (subjectId.invalid && subjectId.touched) {
+          <span class="label-text-alt mt-1 text-error">Choose a subject.</span>
+        }
+      </label>
+
+      <label class="form-control w-full">
+        <span class="label-text mb-1">Difficulty</span>
+        <select class="select select-bordered w-full" formControlName="difficulty">
+          @for (level of difficulties; track level) {
+            <option [value]="level">{{ level }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="form-control w-full">
+        <span class="label-text mb-1">Topic</span>
+        <input
+          type="text"
+          class="input input-bordered w-full"
+          formControlName="topic"
+          [class.input-error]="topic.invalid && topic.touched"
+          placeholder="e.g. Binary search trees"
+        />
+        @if (topic.invalid && topic.touched) {
+          <span class="label-text-alt mt-1 text-error">
+            @if (topic.hasError('required')) {
+              Topic is required.
+            } @else if (topic.hasError('minlength')) {
+              Topic needs at least 3 characters.
+            }
+          </span>
+        }
+      </label>
+
+      <label class="form-control w-full">
+        <span class="label-text mb-1">
+          Question count: {{ form.controls.questionCount.value }}
+        </span>
+        <input
+          type="range"
+          class="range range-primary"
+          formControlName="questionCount"
+          min="1"
+          max="20"
+          step="1"
+        />
+        <div class="flex justify-between text-xs text-base-content/60 px-1 mt-1">
+          <span>1</span>
+          <span>20</span>
+        </div>
+      </label>
+
+      @if (generateError()) {
+        <div class="alert alert-error">
+          <span>{{ generateError() }}</span>
+        </div>
+      }
+
+      @if (generatedQuestions(); as questions) {
+        <div class="alert alert-success">
+          <span>
+            Draft generated with {{ questions.length }}
+            question{{ questions.length === 1 ? '' : 's' }}.
+            <a routerLink="/teacher/preview" class="link link-primary ml-1">
+              Continue to Preview &amp; Edit
+            </a>
+          </span>
+        </div>
+      }
+
+      <div class="card-actions justify-end">
+        <button type="submit" class="btn btn-primary" [disabled]="generating() || loadingSubjects()">
+          @if (generating()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            Generating…
+          } @else {
+            Generate with AI
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
