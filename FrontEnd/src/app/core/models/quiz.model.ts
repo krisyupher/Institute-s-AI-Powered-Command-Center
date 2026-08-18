@@ -122,8 +122,31 @@ export interface SaveQuizRequest {
   questions: CreateQuestionRequest[];
 }
 
-/** The persisted quiz returned by `POST /api/quiz/save`. */
-export type SaveQuizResponse = Quiz;
+/**
+ * One question returned by `POST /api/quiz/generate` before any teacher
+ * edits. Mirrors the backend `GeneratedQuestionResponse` record — no ids,
+ * timestamps, or quiz association yet; those are assigned on save.
+ */
+export interface GeneratedQuestion {
+  text: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: AnswerOption;
+}
+
+/**
+ * Response from `POST /api/quiz/save`. Mirrors the backend `QuizResponse`
+ * record — a summary, not the full persisted `Quiz`.
+ */
+export interface SaveQuizResponse {
+  id: number;
+  title: string;
+  subjectId: number;
+  isPublished: boolean;
+  questionCount: number;
+}
 
 /**
  * A teacher-facing draft quiz: a full `Quiz` plus display metadata the

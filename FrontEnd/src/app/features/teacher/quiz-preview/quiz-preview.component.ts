@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 import {
   AnswerOption,
@@ -11,16 +12,18 @@ import { QuizService } from '../../../core/services/quiz.service';
 
 @Component({
   selector: 'app-quiz-preview',
-  imports: [],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'quiz-preview.component.html',
   styleUrl: 'quiz-preview.component.scss',
 })
 export class QuizPreviewComponent {
   private readonly api = inject(QuizService);
+  private readonly router = inject(Router);
 
   protected readonly draft = signal<QuizDraft | null>(null);
   protected readonly loading = signal(true);
+  protected readonly isFallbackData = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
@@ -31,9 +34,25 @@ export class QuizPreviewComponent {
   protected readonly optionLetters: AnswerOption[] = ['A', 'B', 'C', 'D'];
 
   constructor() {
+    // Prefer a freshly generated quiz handed over by the generator via router
+    // state (Ticket 3.3). `history.state` survives an in-tab refresh; navigation
+    // extras do not, so read the persisted pushState object directly.
+    const stateQuizDraft = (window.history.state as
+      | { quizDraft?: QuizDraft }
+      | null)?.quizDraft;
+
+    if (stateQuizDraft?.questions?.length) {
+      this.draft.set(stateQuizDraft);
+      this.loading.set(false);
+      return;
+    }
+
+    // No generator state (e.g. reached via the dashboard "Review Draft" button
+    // or a hard refresh): serve the mock draft so the screen never breaks.
     this.api.getDraftQuiz().subscribe({
       next: (draft) => {
         this.draft.set(draft);
+        this.isFallbackData.set(true);
         this.loading.set(false);
       },
       error: () => {
@@ -197,11 +216,18 @@ export class QuizPreviewComponent {
         this.published.set(true);
         this.saving.set(false);
         this.draft.set({ ...draft, isPublished: true });
+        // Back to the teacher's quiz list once the publish succeeds.
+        this.router.navigate(['/teacher/quizzes']);
       },
       error: () => {
         this.saveError.set('Could not publish the quiz. Please try again.');
         this.saving.set(false);
       },
     });
+  }
+
+  /** Leave the editor without saving; return to the generator. */
+  protected cancel(): void {
+    this.router.navigate(['/teacher/generator']);
   }
 }
