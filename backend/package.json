@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": ".NET backend helper scripts",
   "scripts": {
-    "start": "dotnet run",
+    "start": "dotnet run --project AiInstituteManager.API",
     "build": "dotnet build",
     "test": "dotnet test",
-    "db-reset": "rm -f AiInstituteManager.API/institute.db && dotnet ef database update",
-    "db-migrate": "dotnet ef database update",
-    "db-seed": "dotnet ef database update",
+    "db-reset": "npx rimraf AiInstituteManager.API/institute.db && dotnet ef database update --project AiInstituteManager.API",
+    "db-migrate": "dotnet ef database update --project AiInstituteManager.API",
+    "db-seed": "dotnet ef database update --project AiInstituteManager.API",
     "swagger": "start http://localhost:5133/swagger",
-    "dev": "dotnet run"
+    "dev": "dotnet run --project AiInstituteManager.API"
   },
   "devDependencies": {
     "rimraf": "^5.0.0"
