@@ -3,16 +3,21 @@
   "version": "1.0.0",
   "description": ".NET backend helper scripts",
   "scripts": {
-    "start": "dotnet run --project AiInstituteManager.API",
+    "start-http": "cross-env ASPNETCORE_URLS=http://0.0.0.0:5218 dotnet run --project AiInstituteManager.API",
+    "start-https": "cross-env ASPNETCORE_URLS=https://0.0.0.0:7083 dotnet run --project AiInstituteManager.API",
+    "start": "cross-env HTTPS=true concurrently \"npm run start-http\" \"npm run start-https\"",
     "build": "dotnet build",
     "test": "dotnet test",
     "db-reset": "npx rimraf AiInstituteManager.API/institute.db && dotnet ef database update --project AiInstituteManager.API",
     "db-migrate": "dotnet ef database update --project AiInstituteManager.API",
     "db-seed": "dotnet ef database update --project AiInstituteManager.API",
-    "swagger": "start http://localhost:5133/swagger",
+    "swagger-http": "start http://localhost:5218/swagger",
+    "swagger-https": "start https://localhost:7083/swagger",
     "dev": "dotnet run --project AiInstituteManager.API"
   },
   "devDependencies": {
-    "rimraf": "^5.0.0"
+    "rimraf": "^5.0.0",
+    "cross-env": "^7.0.3",
+    "concurrently": "^8.2.0"
   }
 }
