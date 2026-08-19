@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { QuizService } from '../../../core/services/quiz.service';
-import { Question, QuizDifficulty, Subject } from '../../../core/models/quiz.model';
+import {GeneratedQuestion, Question, QuizDifficulty, Subject} from '../../../core/models/quiz.model';
 
 /** Ticket 3.3: quiz criteria form that kicks off `POST /api/quiz/generate`. */
 @Component({
@@ -25,7 +25,7 @@ export class QuizGeneratorComponent {
 
   protected readonly generating = signal(false);
   protected readonly generateError = signal<string | null>(null);
-  protected readonly generatedQuestions = signal<Question[] | null>(null);
+  protected readonly generatedQuestions = signal<GeneratedQuestion[] | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     subjectId: [null as number | null, Validators.required],
