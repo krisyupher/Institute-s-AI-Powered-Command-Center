@@ -34,7 +34,15 @@ namespace AiInstituteManager.Infrastructure.Identity
             // what role they hold.
             var claims = new List<Claim>
             {
+                // Both `sub` (standard JWT subject) and a literal `UserId`
+                // claim carry the user's id. `sub` is the interoperable
+                // canonical form; the explicit `UserId` claim satisfies the
+                // ticket's "UserId, Email, Role" claim list verbatim. The
+                // frontend (FrontEnd/src/app/core/auth/jwt.ts) accepts both
+                // via its CLAIM_ALIASES.userId array, so Session.userId
+                // decodes either way.
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new("UserId", user.Id.ToString()),
                 new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
                 // The frontend reads the display name off "unique_name" (see
                 // FrontEnd/src/app/core/auth/jwt.ts) — this used to be two
