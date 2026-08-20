@@ -114,8 +114,13 @@ export interface CreateQuestionRequest {
   correctAnswer: AnswerOption;
 }
 
-/** Payload for `POST /api/quiz/save`: the edited quiz plus its questions. */
+/**
+ * Payload for `POST /api/quiz/save`: the edited quiz plus its questions.
+ * `id` is optional — when present the backend updates that existing quiz
+ * (edit mode); when absent it inserts a new row (create mode).
+ */
 export interface SaveQuizRequest {
+  id?: number;
   title: string;
   subjectId: number;
   isPublished: boolean;

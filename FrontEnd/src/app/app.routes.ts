@@ -52,6 +52,15 @@ export const routes: Routes = [
                 (m) => m.QuizPreviewComponent,
               ),
           },
+          {
+            // Edit mode: loads the quiz identified by :quizId into the editor.
+            path: 'preview/:quizId',
+            title: 'Edit quiz',
+            loadComponent: () =>
+              import('./features/teacher/quiz-preview/quiz-preview.component').then(
+                (m) => m.QuizPreviewComponent,
+              ),
+          },
         ],
       },
 

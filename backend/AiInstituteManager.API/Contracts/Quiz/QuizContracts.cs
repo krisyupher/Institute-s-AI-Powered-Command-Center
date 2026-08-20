@@ -45,6 +45,13 @@ namespace AiInstituteManager.API.Contracts.Quiz
     /// <summary>Body for POST /api/quiz/save — the teacher-approved final quiz.</summary>
     public record SaveQuizRequest
     {
+        /// <summary>
+        /// When set, save loads and updates the existing quiz with this id
+        /// (edit mode, coming from the frontend quiz list) instead of
+        /// inserting a new row (create mode).
+        /// </summary>
+        public int? Id { get; init; }
+
         [Required, MaxLength(200)]
         public string Title { get; init; } = string.Empty;
 
@@ -59,4 +66,23 @@ namespace AiInstituteManager.API.Contracts.Quiz
 
     /// <summary>Returned by POST /api/quiz/save once the quiz is persisted.</summary>
     public record QuizResponse(int Id, string Title, int SubjectId, bool IsPublished, int QuestionCount);
+
+    /// <summary>
+    /// One question as the frontend reads it back from
+    /// GET /api/quiz/{id} / GET /api/quiz/my-quizzes. Mirrors the Angular
+    /// `Question` model one-for-one.
+    /// </summary>
+    public record QuestionResponse(
+        int Id, int QuizId, string Text,
+        string OptionA, string OptionB, string OptionC, string OptionD,
+        string CorrectAnswer, DateTime CreatedAt, DateTime? UpdatedAt);
+
+    /// <summary>
+    /// A full quiz with its nested questions, returned to the frontend
+    /// editor. Mirrors the Angular `Quiz` model (minus `results`, which the
+    /// teacher editor does not render).
+    /// </summary>
+    public record QuizDetailResponse(
+        int Id, string Title, bool IsPublished, int SubjectId, int CreatedByTeacherId,
+        IReadOnlyList<QuestionResponse> Questions, DateTime CreatedAt, DateTime? UpdatedAt);
 }

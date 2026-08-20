@@ -6,7 +6,7 @@
   </p>
 </header>
 
-<section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl max-w-2xl">
+<section class="max-w-2xl mx-auto card bg-base-100 border border-base-200 shadow-xs rounded-2xl">
   <div class="card-body">
     <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label class="form-control w-full">
@@ -60,18 +60,21 @@
       </label>
 
       <label class="form-control w-full">
-        <span class="label-text mb-1">
-          Question count: {{ form.controls.questionCount.value }}
+        <span class="label-text mb-1 flex items-center justify-between">
+          Question count
+          <span class="badge badge-soft badge-primary badge-lg tabular-nums">
+            {{ form.controls.questionCount.value }}
+          </span>
         </span>
         <input
           type="range"
-          class="range range-primary"
+          class="range range-primary w-full max-w-none"
           formControlName="questionCount"
           min="1"
           max="20"
           step="1"
         />
-        <div class="flex justify-between text-xs text-base-content/60 px-1 mt-1">
+        <div class="flex justify-between text-xs text-base-content/60 mt-1">
           <span>1</span>
           <span>20</span>
         </div>
@@ -80,18 +83,6 @@
       @if (generateError()) {
         <div class="alert alert-error">
           <span>{{ generateError() }}</span>
-        </div>
-      }
-
-      @if (generatedQuestions(); as questions) {
-        <div class="alert alert-success">
-          <span>
-            Draft generated with {{ questions.length }}
-            question{{ questions.length === 1 ? '' : 's' }}.
-            <a routerLink="/teacher/preview" class="link link-primary ml-1">
-              Continue to Preview &amp; Edit
-            </a>
-          </span>
         </div>
       }
 

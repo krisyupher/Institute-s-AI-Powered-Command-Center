@@ -55,12 +55,6 @@ namespace AiInstituteManager.API.Controllers
             // already run by the time we get here — [ApiController]
             // auto-returns 400 for anything that fails those rules.
 
-            var subject = await _unitOfWork.Subjects.GetByIdAsync(request.SubjectId);
-            if (subject is null)
-            {
-                return NotFound(new { message = $"Subject {request.SubjectId} was not found." });
-            }
-
             var teacherId = GetCurrentUserId();
             if (teacherId is null)
             {
@@ -70,14 +64,159 @@ namespace AiInstituteManager.API.Controllers
                 return Unauthorized(new { message = "Could not determine the current teacher's identity from the token." });
             }
 
+            // Edit mode: an id was supplied, so this replaces the existing
+            // quiz (title/subject/status + a fresh question set) rather than
+            // inserting a new row.
+            if (request.Id is int quizId)
+            {
+                var existing = (await _unitOfWork.Quizzes.FindAsync(q => q.Id == quizId)).FirstOrDefault();
+                if (existing is null)
+                {
+                    return NotFound(new { message = $"Quiz {quizId} was not found." });
+                }
+                if (existing.CreatedByTeacherId != teacherId.Value)
+                {
+                    // A teacher may only edit the quizzes they created.
+                    return Forbid();
+                }
+
+                var updateSubject = await _unitOfWork.Subjects.GetByIdAsync(request.SubjectId);
+                if (updateSubject is null)
+                {
+                    return NotFound(new { message = $"Subject {request.SubjectId} was not found." });
+                }
+
+                existing.Title = request.Title;
+                existing.SubjectId = request.SubjectId;
+                existing.IsPublished = request.IsPublished;
+                existing.MarkAsUpdated();
+
+                // Replace the question set wholesale — the teacher's edited
+                // list is authoritative, so drop the old rows and re-add.
+                var oldQuestions = await _unitOfWork.Questions.FindAsync(q => q.QuizId == quizId);
+                foreach (var old in oldQuestions)
+                {
+                    _unitOfWork.Questions.Remove(old);
+                }
+                await AddQuestionsAsync(quizId, request.Questions);
+
+                await _unitOfWork.SaveChangesAsync();
+                return Ok(new QuizResponse(existing.Id, existing.Title, existing.SubjectId, existing.IsPublished, request.Questions.Count));
+            }
+
+            var subject = await _unitOfWork.Subjects.GetByIdAsync(request.SubjectId);
+            if (subject is null)
+            {
+                return NotFound(new { message = $"Subject {request.SubjectId} was not found." });
+            }
+
             var quiz = new Quiz
             {
                 Title = request.Title,
                 SubjectId = request.SubjectId,
                 CreatedByTeacherId = teacherId.Value,
                 IsPublished = request.IsPublished,
-                Questions = request.Questions.Select(q => new Question
+            };
+
+            await _unitOfWork.Quizzes.AddAsync(quiz);
+            await _unitOfWork.SaveChangesAsync();
+            await AddQuestionsAsync(quiz.Id, request.Questions);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Ok(new QuizResponse(quiz.Id, quiz.Title, quiz.SubjectId, quiz.IsPublished, request.Questions.Count));
+        }
+
+        /// <summary>
+        /// GET /api/quiz/{id} — one quiz with its full question set for the
+        /// frontend editor (edit mode from the quiz list). The teacher is
+        /// allowed to view any quiz id; publish/submit gating is a separate
+        /// concern from reading a draft back.
+        /// </summary>
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<QuizDetailResponse>> GetById(int id)
+        {
+            var quiz = (await _unitOfWork.Quizzes.FindAsync(q => q.Id == id)).FirstOrDefault();
+            if (quiz is null)
+            {
+                return NotFound(new { message = $"Quiz {id} was not found." });
+            }
+            return Ok(await MapDetailAsync(quiz));
+        }
+
+        /// <summary>
+        /// DELETE /api/quiz/{id} — removes a quiz and its questions. The
+        /// teacher may only delete quizzes they created. QuizResults point at
+        /// the quiz with DeleteBehavior.Restrict, so they are removed
+        /// explicitly first (cascade would otherwise be thrown out by the FK).
+        /// </summary>
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var teacherId = GetCurrentUserId();
+            if (teacherId is null)
+            {
+                return Unauthorized(new { message = "Could not determine the current teacher's identity from the token." });
+            }
+
+            var quiz = (await _unitOfWork.Quizzes.FindAsync(q => q.Id == id)).FirstOrDefault();
+            if (quiz is null)
+            {
+                return NotFound(new { message = $"Quiz {id} was not found." });
+            }
+            if (quiz.CreatedByTeacherId != teacherId.Value)
+            {
+                return Forbid();
+            }
+
+            // QuizResult -> Quiz is Restrict (see QuizResultConfiguration),
+            // so drop any results before the quiz so the FK delete is not blocked.
+            var results = await _unitOfWork.QuizResults.FindAsync(r => r.QuizId == id);
+            foreach (var result in results)
+            {
+                _unitOfWork.QuizResults.Remove(result);
+            }
+
+            // Question -> Quiz is Cascade, so the questions go with the quiz.
+            _unitOfWork.Quizzes.Remove(quiz);
+            await _unitOfWork.SaveChangesAsync();
+            return NoContent();
+        }
+
+        /// <summary>
+        /// GET /api/quiz/my-quizzes — every quiz created by the logged-in
+        /// teacher, with questions, for the teacher quiz list view.
+        /// </summary>
+        [HttpGet("my-quizzes")]
+        public async Task<ActionResult<IReadOnlyList<QuizDetailResponse>>> GetMyQuizzes()
+        {
+            var teacherId = GetCurrentUserId();
+            if (teacherId is null)
+            {
+                return Unauthorized(new { message = "Could not determine the current teacher's identity from the token." });
+            }
+
+            var quizzes = (await _unitOfWork.Quizzes.FindAsync(q => q.CreatedByTeacherId == teacherId.Value))
+                .OrderByDescending(q => q.CreatedAt)
+                .ToList();
+
+            var quizIds = quizzes.Select(q => q.Id).ToList();
+            var allQuestions = await _unitOfWork.Questions.FindAsync(q => quizIds.Contains(q.QuizId));
+
+            var result = new List<QuizDetailResponse>(quizzes.Count);
+            foreach (var quiz in quizzes)
+            {
+                result.Add(MapDetail(quiz, allQuestions.Where(q => q.QuizId == quiz.Id)));
+            }
+            return Ok(result);
+        }
+
+        private async Task AddQuestionsAsync(int quizId, IEnumerable<SaveQuestionRequest> questions)
+        {
+            foreach (var q in questions)
+            {
+                await _unitOfWork.Questions.AddAsync(new Question
                 {
+                    QuizId = quizId,
                     Text = q.Text,
                     OptionA = q.OptionA,
                     OptionB = q.OptionB,
@@ -87,13 +226,29 @@ namespace AiInstituteManager.API.Controllers
                     // guarantees this is A/B/C/D, so Parse (not TryParse)
                     // is safe here.
                     CorrectAnswer = Enum.Parse<AnswerOption>(q.CorrectAnswer, ignoreCase: true)
-                }).ToList()
-            };
+                });
+            }
+        }
 
-            await _unitOfWork.Quizzes.AddAsync(quiz);
-            await _unitOfWork.SaveChangesAsync();
+        private async Task<QuizDetailResponse> MapDetailAsync(Quiz quiz)
+        {
+            var questions = await _unitOfWork.Questions.FindAsync(q => q.QuizId == quiz.Id);
+            return MapDetail(quiz, questions);
+        }
 
-            return Ok(new QuizResponse(quiz.Id, quiz.Title, quiz.SubjectId, quiz.IsPublished, quiz.Questions.Count));
+        private static QuizDetailResponse MapDetail(Quiz quiz, IEnumerable<Question> questions)
+        {
+            var mapped = questions
+                .OrderBy(q => q.Id)
+                .Select(q => new QuestionResponse(
+                    q.Id, q.QuizId, q.Text,
+                    q.OptionA, q.OptionB, q.OptionC, q.OptionD,
+                    q.CorrectAnswer.ToString(), q.CreatedAt, q.UpdatedAt))
+                .ToList();
+
+            return new QuizDetailResponse(
+                quiz.Id, quiz.Title, quiz.IsPublished, quiz.SubjectId,
+                quiz.CreatedByTeacherId, mapped, quiz.CreatedAt, quiz.UpdatedAt);
         }
 
         /// <summary>
