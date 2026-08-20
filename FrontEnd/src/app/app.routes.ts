@@ -15,6 +15,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/login/login.component').then((m) => m.LoginComponent),
   },
+  {
+    path: 'register',
+    title: 'Create account',
+    loadComponent: () =>
+      import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
+  },
 
   {
     path: '',
@@ -47,6 +53,15 @@ export const routes: Routes = [
           {
             path: 'preview',
             title: 'Preview quiz',
+            loadComponent: () =>
+              import('./features/teacher/quiz-preview/quiz-preview.component').then(
+                (m) => m.QuizPreviewComponent,
+              ),
+          },
+          {
+            // Edit mode: loads the quiz identified by :quizId into the editor.
+            path: 'preview/:quizId',
+            title: 'Edit quiz',
             loadComponent: () =>
               import('./features/teacher/quiz-preview/quiz-preview.component').then(
                 (m) => m.QuizPreviewComponent,

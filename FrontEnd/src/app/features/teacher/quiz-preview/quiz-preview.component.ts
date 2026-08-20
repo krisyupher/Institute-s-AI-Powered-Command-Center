@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import {
@@ -17,9 +17,12 @@ import { QuizService } from '../../../core/services/quiz.service';
   templateUrl: 'quiz-preview.component.html',
   styleUrl: 'quiz-preview.component.scss',
 })
-export class QuizPreviewComponent {
+export class QuizPreviewComponent implements OnInit {
   private readonly api = inject(QuizService);
   private readonly router = inject(Router);
+
+  /** Route input (`/teacher/preview/:quizId`); undefined when editing a fresh draft. */
+  readonly quizId = input<string>();
 
   protected readonly draft = signal<QuizDraft | null>(null);
   protected readonly loading = signal(true);
@@ -30,16 +33,33 @@ export class QuizPreviewComponent {
   protected readonly published = signal(false);
   private readonly dragFromId = signal<number | null>(null);
   protected readonly dragTarget = signal<number | null>(null);
+  /** True when loaded from the quiz list (edit mode) so save updates, not inserts. */
+  protected readonly editing = signal(false);
 
   protected readonly optionLetters: AnswerOption[] = ['A', 'B', 'C', 'D'];
 
   constructor() {
-    // Prefer a freshly generated quiz handed over by the generator via router
-    // state (Ticket 3.3). `history.state` survives an in-tab refresh; navigation
+    // IMPORTANT: this.quizId() must NOT be read here. Route params bind to
+    // component inputs only after construction (withComponentInputBinding),
+    // so it is still undefined in the constructor. Defer to ngOnInit.
+  }
+
+  ngOnInit(): void {
+    // Edit mode: navigated from the quiz list with an id — load that quiz
+    // (HTTP with mock fallback) and populate the editor so the teacher can
+    // rework and re-publish it. Takes priority over any stale router draft.
+    const idParam = this.quizId();
+    if (idParam) {
+      this.loadQuizById(Number(idParam));
+      return;
+    }
+
+    // Fresh-publish flow: the generator hands a quiz over via router state
+    // (Ticket 3.3). `history.state` survives an in-tab refresh; navigation
     // extras do not, so read the persisted pushState object directly.
     const stateQuizDraft = (window.history.state as
-      | { quizDraft?: QuizDraft }
-      | null)?.quizDraft;
+      | { draftQuiz?: QuizDraft }
+      | null)?.draftQuiz;
 
     if (stateQuizDraft?.questions?.length) {
       this.draft.set(stateQuizDraft);
@@ -47,8 +67,9 @@ export class QuizPreviewComponent {
       return;
     }
 
-    // No generator state (e.g. reached via the dashboard "Review Draft" button
-    // or a hard refresh): serve the mock draft so the screen never breaks.
+    // No generator state and no id (e.g. reached via the dashboard "Review
+    // Draft" button or a hard refresh): serve the mock draft so the screen
+    // never breaks.
     this.api.getDraftQuiz().subscribe({
       next: (draft) => {
         this.draft.set(draft);
@@ -57,6 +78,45 @@ export class QuizPreviewComponent {
       },
       error: () => {
         this.error.set('Could not load the draft quiz.');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  /** Loads a persisted quiz by id and maps it into the editable `QuizDraft`. */
+  private loadQuizById(id: number): void {
+    this.api.getQuizById(id).subscribe({
+      next: (quiz) => {
+        if (!quiz) {
+          this.error.set('Quiz not found.');
+          this.loading.set(false);
+          return;
+        }
+        // Resolve the subject display name (QuizDraft carries it for the UI;
+        // the persisted Quiz only holds the foreign key).
+        this.api.getSubjectStats().subscribe({
+          next: (subjects) => {
+            this.draft.set({
+              ...quiz,
+              difficulty: 'Medium',
+              subjectName:
+                subjects.find((s) => s.id === quiz.subjectId)?.name ??
+                `Subject #${quiz.subjectId}`,
+            });
+            this.published.set(quiz.isPublished);
+            this.isFallbackData.set(false);
+            // Edit mode: save must UPDATE this row, not insert a new one.
+            this.editing.set(true);
+            this.loading.set(false);
+          },
+          error: () => {
+            this.error.set('Could not load the quiz.');
+            this.loading.set(false);
+          },
+        });
+      },
+      error: () => {
+        this.error.set('Could not load the quiz.');
         this.loading.set(false);
       },
     });
@@ -196,6 +256,7 @@ export class QuizPreviewComponent {
     this.saveError.set(null);
 
     const request: SaveQuizRequest = {
+      ...(this.editing() ? { id: draft.id } : {}),
       title: draft.title.trim(),
       subjectId: draft.subjectId,
       isPublished: true,

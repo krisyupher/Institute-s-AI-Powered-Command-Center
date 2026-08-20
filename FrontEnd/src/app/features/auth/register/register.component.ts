@@ -4,16 +4,18 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { RegisterRequest } from '../../../core/models/auth.model';
+import { UserRole } from '../../../core/models/user.model';
 
-/** Ticket 2.5: styled login form wired to `AuthService.login()`. */
+/** Ticket 2.5: styled registration form wired to `AuthService.register()`. */
 @Component({
-  selector: 'app-login',
+  selector: 'app-register',
   imports: [ReactiveFormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: 'login.component.html',
-  styleUrl: 'login.component.scss',
+  templateUrl: 'register.component.html',
+  styleUrl: 'register.component.scss',
 })
-export class LoginComponent {
+export class RegisterComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -21,10 +23,18 @@ export class LoginComponent {
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);
 
+  protected readonly roles: readonly UserRole[] = ['Student', 'Teacher', 'Admin'];
+
   protected readonly form = this.fb.nonNullable.group({
+    fullName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    role: ['Student', [Validators.required]],
   });
+
+  protected get fullName() {
+    return this.form.controls.fullName;
+  }
 
   protected get email() {
     return this.form.controls.email;
@@ -32,6 +42,10 @@ export class LoginComponent {
 
   protected get password() {
     return this.form.controls.password;
+  }
+
+  protected get role() {
+    return this.form.controls.role;
   }
 
   protected submit(): void {
@@ -45,21 +59,29 @@ export class LoginComponent {
     this.submitting.set(true);
     this.error.set(null);
 
-    this.auth.login(this.form.getRawValue()).subscribe({
+    const raw = this.form.getRawValue();
+    const request: RegisterRequest = {
+      fullName: raw.fullName,
+      email: raw.email,
+      password: raw.password,
+      role: raw.role as UserRole,
+    };
+
+    this.auth.register(request).subscribe({
       next: () => {
         this.submitting.set(false);
         void this.router.navigateByUrl(this.auth.homeRoute());
       },
       error: (err: unknown) => {
         this.submitting.set(false);
-        this.error.set(describeLoginError(err));
+        this.error.set(describeRegisterError(err));
       },
     });
   }
 }
 
-/** Maps a failed `AuthService.login()` into copy the alert can show as-is. */
-function describeLoginError(err: unknown): string {
+/** Maps a failed `AuthService.register()` into copy the alert can show as-is. */
+function describeRegisterError(err: unknown): string {
   if (err instanceof HttpErrorResponse) {
     const message = (err.error as { message?: string } | null)?.message;
     if (message) return message;

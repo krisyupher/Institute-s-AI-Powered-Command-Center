@@ -1,10 +1,31 @@
 <div class="flex min-h-[70vh] items-center justify-center px-4">
   <div class="card w-full max-w-sm bg-base-100 border border-base-200 shadow-xs rounded-2xl">
     <div class="card-body">
-      <h1 class="text-2xl font-semibold text-center">Sign in</h1>
+      <h1 class="text-2xl font-semibold text-center">Create account</h1>
       <p class="mt-1 text-center text-sm text-base-content/70">Institute AI Manager</p>
 
       <form class="mt-4 flex flex-col gap-3" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <label class="form-control w-full">
+          <span class="label-text mb-1">Full name</span>
+          <input
+            type="text"
+            formControlName="fullName"
+            class="input input-bordered w-full"
+            [class.input-error]="fullName.invalid && fullName.touched"
+            placeholder="Jane Doe"
+            autocomplete="name"
+          />
+          @if (fullName.invalid && fullName.touched) {
+            <span class="label-text-alt mt-1 text-error">
+              @if (fullName.hasError('required')) {
+                Full name is required.
+              } @else if (fullName.hasError('minlength')) {
+                Name must be at least 2 characters.
+              }
+            </span>
+          }
+        </label>
+
         <label class="form-control w-full">
           <span class="label-text mb-1">Email</span>
           <input
@@ -33,12 +54,27 @@
             formControlName="password"
             class="input input-bordered w-full"
             [class.input-error]="password.invalid && password.touched"
-            placeholder="••••••••"
-            autocomplete="current-password"
+            placeholder="At least 6 characters"
+            autocomplete="new-password"
           />
           @if (password.invalid && password.touched) {
-            <span class="label-text-alt mt-1 text-error">Password is required.</span>
+            <span class="label-text-alt mt-1 text-error">
+              @if (password.hasError('required')) {
+                Password is required.
+              } @else if (password.hasError('minlength')) {
+                Password must be at least 6 characters.
+              }
+            </span>
           }
+        </label>
+
+        <label class="form-control w-full">
+          <span class="label-text mb-1">Role</span>
+          <select formControlName="role" class="select select-bordered w-full">
+            @for (option of roles; track option) {
+              <option [value]="option">{{ option }}</option>
+            }
+          </select>
         </label>
 
         @if (error()) {
@@ -50,14 +86,14 @@
         <button type="submit" class="btn btn-primary mt-2" [disabled]="submitting()">
           @if (submitting()) {
             <span class="loading loading-spinner loading-sm"></span>
-            Signing in…
+            Creating account…
           } @else {
-            Sign in
+            Create account
           }
         </button>
 
         <p class="mt-2 text-center text-sm">
-          No account yet? <a class="link link-primary" routerLink="/register">Create one</a>
+          Already have an account? <a class="link link-primary" routerLink="/login">Sign in</a>
         </p>
       </form>
     </div>

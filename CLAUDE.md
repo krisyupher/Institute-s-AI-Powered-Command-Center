@@ -78,16 +78,12 @@ Auth is real and wired end to end; quiz/admin data is still mocked:
 | --- | --- |
 | `npm start` | Dev server on http://localhost:4200 |
 | `npm run build` | Production build (budgets: 1 MB initial, 8 kB per component style) |
-| `npm test` | Unit tests — `@angular/build:unit-test` builder, vitest runner, jsdom |
-| `npx ng test --include src/app/core/guards/role.guard.spec.ts` | Run one spec file |
-| `npx ng test --filter "^roleGuard"` | Run tests whose suite/test name matches a regex |
-| `npx ng test --watch` | Watch mode |
 
-There is **no vitest.config.ts and no lint target**. Vitest is driven entirely by the
-Angular builder in [angular.json](FrontEnd/angular.json); `tsconfig.spec.json` supplies
-`vitest/globals`, so specs use `describe`/`it`/`expect` without imports. Formatting comes
-from the `prettier` block in [package.json](FrontEnd/package.json) (100 cols, single
-quotes) — there is no `npm run format`.
+There are **no unit tests in this project**. Spec files were removed and generation is
+disabled by default (`skipTests: true` under the component schematic in
+[angular.json](FrontEnd/angular.json)); there is no `npm test`. Formatting comes from the
+`prettier` block in [package.json](FrontEnd/package.json) (100 cols, single quotes) — there
+is no `npm run format`.
 
 ### Backend — run from `backend/`
 

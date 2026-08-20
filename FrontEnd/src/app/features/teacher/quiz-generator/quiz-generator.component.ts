@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { QuizService } from '../../../core/services/quiz.service';
-import {GeneratedQuestion, Question, QuizDifficulty, Subject} from '../../../core/models/quiz.model';
+import { QuizDifficulty, Subject } from '../../../core/models/quiz.model';
 
 /** Ticket 3.3: quiz criteria form that kicks off `POST /api/quiz/generate`. */
 @Component({
   selector: 'app-quiz-generator',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'quiz-generator.component.html',
   styleUrl: 'quiz-generator.component.scss',
@@ -16,6 +16,7 @@ import {GeneratedQuestion, Question, QuizDifficulty, Subject} from '../../../cor
 export class QuizGeneratorComponent {
   private readonly fb = inject(FormBuilder);
   private readonly quizApi = inject(QuizService);
+  private readonly router = inject(Router);
 
   protected readonly difficulties: readonly QuizDifficulty[] = ['Easy', 'Medium', 'Hard'];
 
@@ -25,7 +26,6 @@ export class QuizGeneratorComponent {
 
   protected readonly generating = signal(false);
   protected readonly generateError = signal<string | null>(null);
-  protected readonly generatedQuestions = signal<GeneratedQuestion[] | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     subjectId: [null as number | null, Validators.required],
@@ -65,16 +65,17 @@ export class QuizGeneratorComponent {
 
     this.generating.set(true);
     this.generateError.set(null);
-    this.generatedQuestions.set(null);
 
     const { subjectId, difficulty, topic, questionCount } = this.form.getRawValue();
 
     this.quizApi
       .generateQuiz({ subjectId: subjectId!, difficulty, topic, questionCount })
       .subscribe({
-        next: (questions) => {
+        // Draft ready: hand it straight to the preview-edit screen via router
+        // state (no static link/banner), where the teacher reviews and edits.
+        next: (draftQuiz) => {
           this.generating.set(false);
-          this.generatedQuestions.set(questions);
+          this.router.navigate(['/teacher/preview'], { state: { draftQuiz } });
         },
         error: () => {
           this.generating.set(false);

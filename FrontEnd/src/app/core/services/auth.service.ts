@@ -5,7 +5,7 @@ import { Observable, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { decodeSession, mintMockToken } from '../auth/jwt';
 import { MOCK_USERS } from '../mock/mock-data';
-import { LoginRequest, LoginResponse, sessionToUser } from '../models/auth.model';
+import { LoginRequest, LoginResponse, RegisterRequest, sessionToUser } from '../models/auth.model';
 import { User, UserRole } from '../models/user.model';
 
 /** localStorage key holding the raw JWT. */
@@ -75,6 +75,23 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<User> {
     return this.http
       .post<LoginResponse>(`${environment.apiBaseUrl}/api/auth/login`, credentials)
+      .pipe(
+        map((response) => response.token),
+        tap((token) => this.storeToken(token)),
+        map(() => this.user()),
+      );
+  }
+
+  /**
+   * `POST /api/auth/register` against the real database. The backend shapes the response
+   * exactly like login (`{ token, email, role }`), so a fresh account is signed in
+   * immediately — the returned JWT is stored and the session updates from it. Any
+   * validation failure (duplicate email, weak password) propagates to the caller as a real
+   * error.
+   */
+  register(credentials: RegisterRequest): Observable<User> {
+    return this.http
+      .post<LoginResponse>(`${environment.apiBaseUrl}/api/auth/register`, credentials)
       .pipe(
         map((response) => response.token),
         tap((token) => this.storeToken(token)),

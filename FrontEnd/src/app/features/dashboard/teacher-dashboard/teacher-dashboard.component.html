@@ -45,7 +45,7 @@
           <tbody>
             @for (quiz of myQuizzes(); track quiz.id) {
               <tr>
-                <td><a [routerLink]="['/teacher', 'quizzes', quiz.id]" class="link link-primary">{{ quiz.title }}</a></td>
+                <td><a [routerLink]="['/teacher/preview', quiz.id]" class="link link-primary">{{ quiz.title }}</a></td>
                 <td>
                       <span class="badge" [ngClass]="quiz.isPublished ? 'badge-success' : 'badge-warning'">
                         {{ quiz.isPublished ? 'Published' : 'Draft' }}
@@ -70,9 +70,6 @@
         </button>
         <button class="btn btn-outline w-full" routerLink="/teacher/quizzes">
           View All Quizzes
-        </button>
-        <button class="btn btn-outline w-full" routerLink="/teacher/preview">
-          Preview Draft Quiz
         </button>
       </div>
     </div>
