@@ -6,7 +6,7 @@ using AiInstituteManager.Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AiInstituteManager.Infrastructure.Identity
+namespace AiInstituteManager.Infrastructure.Services
 {
     /// <summary>
     /// Signs a JWT containing UserId, Email, and Role — exactly what the

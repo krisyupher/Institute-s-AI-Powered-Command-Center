@@ -1,8 +1,9 @@
 using AiInstituteManager.API.Extensions;
 using AiInstituteManager.Domain.Entities;
 using AiInstituteManager.Domain.Enums;
+using AiInstituteManager.Infrastructure.AiGeneration;
 using AiInstituteManager.Infrastructure.Extensions;
-using AiInstituteManager.Infrastructure.Identity;
+using AiInstituteManager.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -52,7 +53,7 @@ builder.Services.AddSwaggerGen(options =>
 // One line pulls in DbContext + generic repositories + UnitOfWork.
 // See: AiInstituteManager.Infrastructure/Extensions/ServiceCollectionExtensions.cs
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddQuizGeneration();
+//builder.Services.AddQuizGeneration();
 
 // Lets the Angular dev server (a different origin) call this API.
 builder.Services.AddFrontendCors(builder.Configuration);
@@ -102,5 +103,17 @@ app.UseCors(CorsExtensions.FrontendPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// TEMPORARY — proves Ticket 3.1's acceptance criteria without needing the
+// full QuizController yet (that's a later ticket). DELETE before the PR.
+app.MapGet("/health/ai-quiz", async (IOpenAiService aiService) =>
+{
+    var questions = await aiService.GenerateQuizQuestionsAsync(
+        topic: "C# basics",
+        difficulty: "Easy",
+        questionCount: 3);
+
+    return Results.Ok(questions);
+});
 
 app.Run();
