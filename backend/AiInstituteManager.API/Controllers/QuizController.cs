@@ -3,7 +3,7 @@ using System.Security.Claims;
 using AiInstituteManager.API.Contracts.Quiz;
 using AiInstituteManager.Domain.Entities;
 using AiInstituteManager.Domain.Enums;
-using AiInstituteManager.Infrastructure.AI;
+using AiInstituteManager.Infrastructure.AiGeneration;
 using AiInstituteManager.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +38,7 @@ namespace AiInstituteManager.API.Controllers
         [HttpPost("generate")]
         public async Task<ActionResult<IReadOnlyList<GeneratedQuestionResponse>>> Generate(GenerateQuizRequest request)
         {
-            var generated = await _openAiService.GenerateQuestionsAsync(
+            var generated = await _openAiService.GenerateQuizQuestionsAsync(
                 request.Topic, request.Difficulty, request.QuestionCount);
 
             var response = generated.Select(q => new GeneratedQuestionResponse(

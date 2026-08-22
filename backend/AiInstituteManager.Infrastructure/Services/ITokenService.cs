@@ -1,6 +1,6 @@
 ﻿using AiInstituteManager.Domain.Entities;
 
-namespace AiInstituteManager.Infrastructure.Identity
+namespace AiInstituteManager.Infrastructure.Services
 {
     //needs to issue a token and AuthController endpoint needs to call this service to get a token for the user
     public interface ITokenService

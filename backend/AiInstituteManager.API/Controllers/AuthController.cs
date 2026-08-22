@@ -1,6 +1,6 @@
 using AiInstituteManager.API.Contracts.Auth;
 using AiInstituteManager.Domain.Entities;
-using AiInstituteManager.Infrastructure.Identity;
+using AiInstituteManager.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
