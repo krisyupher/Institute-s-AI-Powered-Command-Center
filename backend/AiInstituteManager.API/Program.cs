@@ -103,17 +103,4 @@ app.UseCors(CorsExtensions.FrontendPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
-// TEMPORARY — proves Ticket 3.1's acceptance criteria without needing the
-// full QuizController yet (that's a later ticket). DELETE before the PR.
-app.MapGet("/health/ai-quiz", async (IOpenAiService aiService) =>
-{
-    var questions = await aiService.GenerateQuizQuestionsAsync(
-        topic: "C# basics",
-        difficulty: "Easy",
-        questionCount: 3);
-
-    return Results.Ok(questions);
-});
-
 app.Run();

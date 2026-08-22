@@ -48,28 +48,6 @@ namespace AiInstituteManager.Infrastructure.AiGeneration
             int questionCount,
             CancellationToken cancellationToken = default)
         {
-            // ================= TEMPORARY MOCK BYPASS =================
-            // Skips the real OpenAI call entirely while the account has
-            // no billing/credits set up. Proves the DI wiring, the
-            // /health/ai-quiz endpoint, and the GeneratedQuestionDto shape
-            // all work correctly end-to-end.
-            //
-            // DELETE this whole block (down to the "END TEMPORARY MOCK"
-            // line) once OpenAI billing is active, then re-test with the
-            // real call before opening the PR — this bypass must not ship.
-            return Enumerable.Range(1, questionCount)
-                .Select(i => new GeneratedQuestionDto
-                {
-                    Text = $"Sample question {i} about {topic} ({difficulty})",
-                    OptionA = "Option A",
-                    OptionB = "Option B",
-                    OptionC = "Option C",
-                    OptionD = "Option D",
-                    CorrectAnswer = "A"
-                })
-                .ToList();
-            // ================= END TEMPORARY MOCK =================
-
             var requestBody = new ChatCompletionRequest(
                 Model: _settings.Model,
                 Messages: new List<ChatMessage>

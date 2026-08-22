@@ -66,9 +66,6 @@ namespace AiInstituteManager.Infrastructure.Extensions
             {
                 var settings = serviceProvider.GetRequiredService<IOptions<OpenAiSettings>>().Value;
 
-                // TEMPORARY DEBUG LINE
-                Console.WriteLine($"[DEBUG] OpenAI BaseUrl = '{settings.BaseUrl}'");
-
                 client.BaseAddress = new Uri(settings.BaseUrl);
                 client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", settings.ApiKey);
