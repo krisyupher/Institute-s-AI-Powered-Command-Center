@@ -1,0 +1,71 @@
+<header class="mb-6">
+  <h1 class="text-2xl font-semibold">Admin Analytics Dashboard</h1>
+  <p class="mt-1 text-base-content/70">A system-wide view of quiz activity and performance.</p>
+</header>
+
+@if (loading()) {
+  <p class="text-base-content/70">Loading analytics…</p>
+} @else if (error()) {
+  <p class="text-error">{{ error() }}</p>
+} @else if (stats(); as dashboard) {
+  <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ dashboard.totalUsers }}</div>
+        <div class="text-sm text-base-content/70">Total Users</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ dashboard.quizzesGenerated }}</div>
+        <div class="text-sm text-base-content/70">Quizzes Generated</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+      <div class="card-body p-5">
+        <div class="text-3xl font-semibold leading-tight">{{ dashboard.averageScore }}%</div>
+        <div class="text-sm text-base-content/70">Average Class Score</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
+    <div class="card-body">
+      <p class="card-title">Recent System Activity</p>
+      <div class="overflow-x-auto">
+        <table class="table table-sm w-full">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Quiz Title</th>
+              <th>Score Percentage</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (activity of dashboard.recentActivity; track activity.id) {
+              <tr>
+                <td>{{ activity.studentName }}</td>
+                <td>{{ activity.quizTitle }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge-success]="activity.score >= 70"
+                    [class.badge-warning]="activity.score < 70"
+                  >
+                    {{ activity.score }}%
+                  </span>
+                </td>
+                <td>{{ activity.completedAt | date: 'd MMM' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="text-center text-base-content/70">No recent activity.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+}

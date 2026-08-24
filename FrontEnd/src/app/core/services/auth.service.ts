@@ -25,7 +25,7 @@ const GUEST: User = {
 const ROLE_HOME: Record<UserRole, string> = {
   Student: '/dashboard/student',
   Teacher: '/dashboard/teacher',
-  Admin: '/dashboard/admin',
+  Admin: '/admin/dashboard',
 };
 
 /**
