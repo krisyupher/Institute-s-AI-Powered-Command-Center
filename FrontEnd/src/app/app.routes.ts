@@ -111,8 +111,8 @@ export const routes: Routes = [
             path: 'dashboard',
             title: 'Admin dashboard',
             loadComponent: () =>
-              import('./features/admin/dashboard/admin-dashboard-page.component').then(
-                (m) => m.AdminDashboardPageComponent,
+              import('./features/admin/dashboard/admin-dashboard.component').then(
+                (m) => m.AdminDashboardComponent,
               ),
           },
         ],
@@ -147,15 +147,8 @@ export const routes: Routes = [
                 (m) => m.TeacherDashboardComponent,
               ),
           },
-          {
-            path: 'admin',
-            title: 'Institution overview',
-            canActivate: [roleGuard('Admin')],
-            loadComponent: () =>
-              import('./features/dashboard/admin-dashboard/admin-dashboard.component').then(
-                (m) => m.AdminDashboardComponent,
-              ),
-          },
+          // Legacy route retained for bookmarks; the canonical admin page is /admin/dashboard.
+          {path: 'admin', pathMatch: 'full', redirectTo: '/admin/dashboard'},
         ],
       },
 

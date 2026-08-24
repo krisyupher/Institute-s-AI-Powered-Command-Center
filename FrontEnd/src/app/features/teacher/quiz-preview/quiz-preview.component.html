@@ -39,7 +39,7 @@
   }
 
   <!-- Quiz metadata summary -->
-  <section class="card bg-base-100 border border-base-200 shadow-xs mb-4 rounded-2xl">
+  <section class="card bg-base-100 border border-base-200 shadow-sm mb-4">
     <div class="card-body">
       <label class="form-control w-full">
         <span class="label-text mb-1">Quiz title</span>
@@ -84,7 +84,7 @@
   <section class="space-y-4">
     @for (question of quiz.questions; track $index; let i = $index) {
       <div
-        class="card bg-base-100 border border-base-200 shadow-xs mb-4 rounded-2xl"
+        class="card bg-base-100 border border-base-200 shadow-sm mb-4"
         [class.border-primary]="dragTarget() === i"
         [class.opacity-50]="dragTarget() === i"
         (dragover)="dragOver(i, $event)"

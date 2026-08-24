@@ -26,11 +26,13 @@ export class SidebarComponent {
     switch (this.auth.role()) {
       case 'Teacher':
         return [
+          { label: 'Dashboard', route: '/dashboard/teacher' },
           { label: 'Create AI Quiz', route: '/teacher/generator' },
           { label: 'My Quizzes', route: '/teacher/quizzes' },
         ];
       case 'Student':
         return [
+          { label: 'Dashboard', route: '/dashboard/student' },
           { label: 'Available Quizzes', route: '/student/quizzes' },
           { label: 'My Results', route: '/student/results' },
         ];
