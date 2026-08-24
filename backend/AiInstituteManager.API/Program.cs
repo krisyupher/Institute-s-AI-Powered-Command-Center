@@ -63,6 +63,25 @@ builder.Services.AddFrontendCors(builder.Configuration);
 // only CREATES tokens — this is what checks them.
 var jwtSection = builder.Configuration.GetSection("Jwt");
 
+// Validate that required secrets are present in non-development environments
+if (!builder.Environment.IsDevelopment())
+{
+    var jwtKey = jwtSection["Key"];
+    var openAiKey = builder.Configuration["OpenAi:ApiKey"];
+
+    if (string.IsNullOrWhiteSpace(jwtKey))
+    {
+        throw new InvalidOperationException(
+            "JWT signing key is not configured. Set 'Jwt:Key' via user secrets, environment variables, or a secrets manager.");
+    }
+
+    if (string.IsNullOrWhiteSpace(openAiKey))
+    {
+        throw new InvalidOperationException(
+            "OpenAI API key is not configured. Set 'OpenAi:ApiKey' via user secrets, environment variables, or a secrets manager.");
+    }
+}
+
 builder.Services
     .AddAuthentication(options =>
     {

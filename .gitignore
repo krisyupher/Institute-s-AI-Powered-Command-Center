@@ -29,6 +29,8 @@ project.fragment.lock.json
 .env
 .env.*
 !.env.example
+appsettings.Development.json
+appsettings.Production.json
 appsettings.Development.local.json
 appsettings.*.Local.json
 secrets.json
@@ -47,5 +49,6 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# --- Other
+# --- Other ---
 .mcp.json
+.aider*

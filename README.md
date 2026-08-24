@@ -87,10 +87,84 @@ Seeded by `backend/AiInstituteManager.Infrastructure/Data/Seed/SeedData.cs`. Pas
 
 ## Configuration
 
+### API Keys and Secrets
+
+**Important:** Never commit real API keys or JWT secrets to the repository. The `appsettings.json` file contains **empty placeholders** for these values. You must set them locally using one of the methods below.
+
+#### For Local Development (User Secrets)
+
+1. **Initialize user secrets** (run from `backend/AiInstituteManager.API`):
+   ```bash
+   dotnet user-secrets init
+   ```
+
+2. **Set the JWT signing key** (use a strong, random string):
+   ```bash
+   dotnet user-secrets set "Jwt:Key" "your-strong-jwt-secret-here"
+   ```
+
+3. **Set the OpenAI API key** (get one from [Groq](https://console.groq.com/)):
+   ```bash
+   dotnet user-secrets set "OpenAi:ApiKey" "your-groq-api-key-here"
+   ```
+
+4. **Verify the settings are stored** (optional):
+   ```bash
+   dotnet user-secrets list
+   ```
+
+The secrets are stored in `~/.microsoft/usersecrets/` on your machine and are **never** committed to git.
+
+#### For Staging/Production (Environment Variables)
+
+Set environment variables with the `__` (double underscore) separator:
+
+**Linux/macOS:**
+```bash
+export Jwt__Key="your-jwt-secret"
+export OpenAi__ApiKey="your-api-key"
+```
+
+**Windows PowerShell:**
+```powershell
+$env:Jwt__Key="your-jwt-secret"
+$env:OpenAi__ApiKey="your-api-key"
+```
+
+**Windows CMD:**
+```cmd
+set Jwt__Key=your-jwt-secret
+set OpenAi__ApiKey=your-api-key
+```
+
+#### For Cloud Deployments (Azure Key Vault / AWS Secrets Manager)
+
+Use a managed secrets service. For Azure, add the `Azure.Identity` and `Azure.Security.KeyVault.Secrets` NuGet packages, then in `Program.cs`:
+
+```csharp
+builder.Configuration.AddAzureKeyVault(
+    new Uri("https://your-vault.vault.azure.net/"),
+    new DefaultAzureCredential());
+```
+
+#### Configuration Precedence
+
+The .NET configuration system merges settings in this order (later overrides earlier):
+1. `appsettings.json`
+2. `appsettings.{Environment}.json`
+3. User secrets (development only)
+4. Environment variables
+5. Command-line arguments
+
+This means you can override any setting without modifying committed files.
+
+### Other Configuration
+
 Edit `backend/AiInstituteManager.API/appsettings.json`:
-- `Jwt:SigningKey` - Must be set for production (currently placeholder)
 - `ConnectionStrings:Default` - SQL Server LocalDB (default), not Azure SQL yet
 - `Cors:AllowedOrigins` - Defaults to `http://localhost:4200`
+- `Jwt:Issuer` and `Jwt:Audience` - Token validation parameters
+- `OpenAi:BaseUrl` and `OpenAi:Model` - AI service endpoint
 
 ## Development Notes
 
