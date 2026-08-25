@@ -1,0 +1,60 @@
+<header class="mb-6">
+  <h1 class="text-2xl font-semibold">My results</h1>
+  <p class="mt-1 text-base-content/70">Your quiz history and latest score.</p>
+</header>
+
+@if (justSubmitted(); as result) {
+  <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl mb-6">
+    <div class="card-body items-center text-center">
+      <h2 class="card-title">Quiz submitted!</h2>
+      <p class="text-4xl font-bold text-primary">{{ scorePercent() }}%</p>
+      <progress
+        class="progress progress-success w-56"
+        [value]="result.correctCount"
+        [attr.max]="result.totalQuestions"
+      ></progress>
+      <p class="mt-2">
+        You answered <span class="font-semibold">{{ result.correctCount }}</span> out of
+        <span class="font-semibold">{{ result.totalQuestions }}</span> questions correctly.
+      </p>
+      <a class="btn btn-primary btn-sm mt-4" routerLink="/student/quizzes">Back to available quizzes</a>
+    </div>
+  </section>
+}
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-8 text-base-content/60">
+    <span class="loading loading-spinner loading-sm"></span>
+    <span>Loading your results…</span>
+  </div>
+} @else if (pastResults().length > 0) {
+  <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl">
+    <div class="card-body">
+      <h2 class="card-title text-base">Past results</h2>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Quiz</th>
+              <th>Score</th>
+              <th>Completed</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of pastResults(); track result.id) {
+              <tr>
+                <td>Quiz #{{ result.quizId }}</td>
+                <td>{{ result.score }}</td>
+                <td>{{ result.completedAt | date: 'mediumDate' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+} @else if (!justSubmitted()) {
+  <div class="alert">
+    <span>No quiz results yet. Take a quiz to see your score here.</span>
+  </div>
+}
