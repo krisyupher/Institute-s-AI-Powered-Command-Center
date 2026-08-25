@@ -1,0 +1,129 @@
+<header class="mb-6">
+  @if (quiz(); as q) {
+    <h1 class="text-2xl font-semibold">{{ q.title }}</h1>
+  } @else {
+    <h1 class="text-2xl font-semibold">Take Quiz</h1>
+  }
+  <p class="mt-1 text-base-content/70">
+    Answer every question, then review and submit. Your score is calculated instantly.
+  </p>
+</header>
+
+@if (loading()) {
+  <div class="flex flex-col items-center gap-3 py-16 text-base-content/60">
+    <span class="loading loading-spinner loading-lg"></span>
+    <span>Loading quiz…</span>
+  </div>
+} @else if (loadError()) {
+  <div class="alert alert-error">
+    <span>{{ loadError() }}</span>
+  </div>
+} @else if (quiz(); as q) {
+  <!-- Progress -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between text-sm text-base-content/70 mb-1">
+      <span>Question {{ currentIndex() + 1 }} of {{ totalQuestions() }}</span>
+      <span>{{ answeredCount() }} of {{ totalQuestions() }} answered</span>
+    </div>
+    <progress
+      class="progress progress-primary w-full"
+      [value]="answeredCount()"
+      [attr.max]="totalQuestions()"
+    ></progress>
+  </div>
+
+  @if (currentQuestion(); as question) {
+    <!-- Question card -->
+    <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title text-lg">{{ question.text }}</h2>
+
+        <div class="flex flex-col gap-2 mt-2">
+          @for (letter of optionLetters; track letter) {
+            <label
+              class="flex items-center gap-3 rounded-lg border border-base-200 p-3 cursor-pointer transition-colors"
+              [class.border-primary]="answers()[question.id] === letter"
+              [class.bg-base-200]="answers()[question.id] === letter"
+            >
+              <input
+                type="radio"
+                class="radio radio-primary"
+                name="answer-option"
+                [checked]="answers()[question.id] === letter"
+                (change)="selectAnswer(question.id, letter)"
+              />
+              <span class="font-medium">{{ letter }}.</span>
+              <span>{{ optionText(question, letter) }}</span>
+            </label>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation -->
+    <div class="flex items-center justify-between gap-3">
+      <button class="btn btn-ghost" (click)="goPrevious()" [disabled]="currentIndex() === 0">
+        ← Previous
+      </button>
+
+      @if (isLastQuestion()) {
+        <button class="btn btn-primary" (click)="askSubmit()" [disabled]="!allAnswered()">
+          Submit Quiz
+        </button>
+      } @else {
+        <button class="btn btn-primary" (click)="goNext()">Next →</button>
+      }
+    </div>
+
+    @if (isLastQuestion() && !allAnswered()) {
+      <p class="mt-3 text-sm text-warning text-right">
+        Answer every question before submitting.
+      </p>
+    }
+
+    @if (submitError()) {
+      <div class="alert alert-error mt-4">
+        <span>{{ submitError() }}</span>
+      </div>
+    }
+
+    <!-- Question navigator -->
+    <div class="flex flex-wrap gap-2 mt-6">
+      @for (item of q.questions; track item.id; let i = $index) {
+        <button
+          type="button"
+          class="btn btn-circle btn-xs"
+          [class.btn-primary]="i === currentIndex()"
+          [class.btn-outline]="i !== currentIndex() && !answers()[item.id]"
+          [class.btn-success]="i !== currentIndex() && answers()[item.id]"
+          (click)="jumpTo(i)"
+        >
+          {{ i + 1 }}
+        </button>
+      }
+    </div>
+  }
+}
+
+@if (showConfirm()) {
+  <dialog class="modal modal-open" (click)="cancelSubmit()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3 class="text-lg font-bold">Submit quiz?</h3>
+      <p class="py-4">
+        You've answered {{ answeredCount() }} of {{ totalQuestions() }} questions. Once
+        submitted, you won't be able to change your answers.
+      </p>
+      <div class="modal-action">
+        <button class="btn" (click)="cancelSubmit()" [disabled]="submitting()">Cancel</button>
+        <button class="btn btn-primary" (click)="confirmSubmit()" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            Submitting…
+          } @else {
+            Submit
+          }
+        </button>
+      </div>
+    </div>
+  </dialog>
+}

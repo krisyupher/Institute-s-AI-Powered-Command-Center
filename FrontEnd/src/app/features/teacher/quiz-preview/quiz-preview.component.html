@@ -80,8 +80,9 @@
     </div>
   </section>
 
-  <!-- Editable question cards -->
-  <section class="space-y-4">
+  <!-- Editable question cards. pb-24 reserves room for the sticky action bar below so it
+       never overlaps the last-scrolled card's content. -->
+  <section class="space-y-4 pb-24">
     @for (question of quiz.questions; track $index; let i = $index) {
       <div
         class="card bg-base-100 border border-base-200 shadow-sm mb-4"

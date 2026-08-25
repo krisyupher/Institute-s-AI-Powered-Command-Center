@@ -9,7 +9,7 @@ Campus ERP MVP delivering an AI-powered Quiz/Exam Generator.
 - **Teacher**: Generate, review/edit draft AI quizzes, and publish.
 - **Student**: Take quizzes with instant auto-grading.
 - **Admin**: View system-wide metrics.
-- Target architecture: Angular SPA → ASP.NET Core API → Azure OpenAI & Azure SQL.
+- Architecture: Angular SPA → ASP.NET Core API → OpenAI-compatible REST API & SQL Server.
 
 ## REPOSITORY LAYOUT
 
@@ -25,50 +25,73 @@ the Backend commands note) — neither lives at the repo root.
 
 ## CURRENT STATE (read this before assuming a feature exists)
 
-Auth is real and wired end to end; quiz/admin data is still mocked:
+Auth and quiz generation/save/list are real and wired end to end; the student flow and
+admin metrics are still mocked:
 
-- **Auth is live.** [AuthController](backend/AiInstituteManager.API/Contollers/AuthController.cs)
+- **Auth is live.** [AuthController](backend/AiInstituteManager.API/Controllers/AuthController.cs)
   (`POST /api/auth/register`, `/login`, `GET /api/auth/me`) is implemented on top of
   ASP.NET Identity's `UserManager`/`SignInManager` + `JwtTokenService`, and
   `Program.cs` calls `await app.ApplyDbMigrationsAndSeedAsync();` on startup, so migrations
-  run and demo accounts exist before the first request.
+  run and demo accounts exist before the first request. Demo logins (seeded by
+  [SeedData.cs](backend/AiInstituteManager.Infrastructure/Data/Seed/SeedData.cs)):
+  `student@humber.ca` / `Student123!`, `teacher@humber.ca` / `Teacher123!`,
+  `admin@humber.ca` / `Admin123!`.
   [AuthService.login()](FrontEnd/src/app/core/services/auth.service.ts) makes a real
   `HttpClient.post` to `${environment.apiBaseUrl}/api/auth/login`; a functional
   [authInterceptor](FrontEnd/src/app/core/interceptors/auth.interceptor.ts) (registered in
   `app.config.ts`) attaches `Authorization: Bearer <token>` to every other outgoing
   request. `AuthService.session`/`isAuthenticated`/`role` are all `computed()` from
   decoding the JWT in `localStorage` (`core/auth/jwt.ts`) — there is no separate
-  "logged in" flag to fall out of sync.
-  - There is no mock-auth fallback and no demo role-switcher anymore — both were removed
-    once real login shipped, because they fabricated a signed-in identity without ever
-    calling the backend. `AuthService.login()` only ever succeeds via a real
-    `POST /api/auth/login` against the database; any failure (bad credentials, unreachable
-    API) propagates to the caller as a real error. `AuthService.setRole()` still exists but
-    is a **test-only** helper now (mints a session locally so specs don't need to mock
-    HTTP) — nothing in the production UI calls it.
+  "logged in" flag to fall out of sync. `AuthService.setRole()` is a **test-only** helper
+  (mints a session locally so specs don't need to mock HTTP); nothing in the production UI
+  calls it — the real app only ever authenticates through `login()`/`register()` against
+  the database.
   - CORS is configured via [CorsExtensions.cs](backend/AiInstituteManager.API/Extensions/CorsExtensions.cs)
     (`Cors:AllowedOrigins` in `appsettings.json`, defaults to `http://localhost:4200`).
     `environment.apiBaseUrl` points at the HTTPS profile (`https://localhost:7083`)
     directly rather than the HTTP one — the API calls `UseHttpsRedirection()`, so hitting
     HTTP just 307-redirects, and CORS preflights don't reliably survive a redirect.
-- **Quiz and admin data are still fully mocked.** `QuizService`, `AdminService`, and
-  `DashboardApi`
-  ([quiz.service.ts](FrontEnd/src/app/core/services/quiz.service.ts),
-  [admin.service.ts](FrontEnd/src/app/core/services/admin.service.ts),
-  [dashboard.api.ts](FrontEnd/src/app/core/api/dashboard.api.ts)) all return
-  `of(MOCK…).pipe(delay(250))` with no `HttpClient` calls. Method signatures deliberately
-  match the endpoints in `docs/PROJECT_PLAN.md`, so wiring the real API means swapping the
-  body for `this.http.*` with no caller changes — **preserve those signatures**.
-- **The backend has controllers only for auth.** Quiz/admin endpoints from
-  `docs/PROJECT_PLAN.md` (`/api/quiz/*`, `/api/admin/*`) and the Azure OpenAI integration
-  are not implemented yet — Domain/Infrastructure (entities, EF configs, generic
-  repository/UnitOfWork, seeding) are in place underneath where those controllers will go.
+- **Quiz generate/save/list/delete are live.**
+  [QuizController](backend/AiInstituteManager.API/Controllers/QuizController.cs)
+  (`[Authorize(Roles = "Teacher")]`, route `api/quiz`) implements `POST /generate` (calls
+  `IOpenAiService`), `POST /save` (create or, when `id` is supplied, replace-in-place; a
+  teacher may only edit/delete quizzes they created), `GET /{id}`, `DELETE /{id}`, and
+  `GET /my-quizzes`. It is built against `IUnitOfWork` and `IOpenAiService` (interfaces),
+  not concrete classes, so swapping either implementation needs zero controller changes.
+  `POST /api/quiz/generate` calls out to an OpenAI-*compatible* REST API — see
+  `OpenAiSettings` below; `docs/PROJECT_PLAN.md` says "Azure OpenAI" but the current
+  implementation and `README.md` target **Groq's OpenAI-compatible endpoint**
+  (`OpenAi:BaseUrl`/`OpenAi:ApiKey`/`OpenAi:Model` in `appsettings.json`, real values via
+  `dotnet user-secrets` — never commit them).
+  - **Not yet implemented on the backend**: `GET /api/quiz/available` (student quiz list),
+    `POST /api/quiz/submit` (grading), and all of `/api/admin/*`. These are still
+    frontend-only mocks.
+  - [QuizService](FrontEnd/src/app/core/services/quiz.service.ts) reflects this split
+    directly: `generateQuiz`, `saveQuiz`, `deleteQuiz`, `getQuizById`, and
+    `getTeacherQuizzes` call the real `${apiBaseUrl}/api/quiz/*` endpoints first and
+    `catchError` into an equivalent mock response (so the UI keeps working if the API is
+    down or a route isn't implemented yet); `getAvailableQuizzes`, `submitQuiz`,
+    `getDraftQuiz`, `getStudentResults`, and `getSubjectStats` are still pure
+    `of(MOCK…).pipe(delay(250))` with no `HttpClient` call, because there is no backend
+    route to call yet. Same pattern in
+    [AdminService.getAdminStats()](FrontEnd/src/app/core/services/admin.service.ts): real
+    call to `GET /api/admin/stats` with a mock `catchError` fallback. **When adding a new
+    backend route, follow this pattern** — try the real call, `catchError` into the
+    existing mock — rather than swapping the mock out wholesale, so the frontend degrades
+    gracefully until every route lands.
 - **Most feature components are placeholders** rendering `<app-placeholder-page>`
-  (teacher quiz generator/list, student quiz flows, admin dashboard page); the routing
-  skeleton, layout shell, role guard, and login page are real.
-- **`README.md` describes a different project layout** (`BackEnd/src/Institute.Api`,
-  `DataBase/`, `Documentation/`, a Claude-backed AI assistant, SQLite). None of those paths
-  exist here. Trust `docs/PROJECT_PLAN.md` and the code over the README.
+  (student quiz-taking flow is not yet backed by a real endpoint; the teacher generator →
+  preview → save flow and the admin dashboard are real). Two components are currently
+  orphaned dead code — not imported by `app.routes.ts` or anything else — and can be
+  deleted or revived without touching a live path:
+  `features/admin/dashboard/admin-dashboard-page.component.ts` and the entire
+  `features/dashboard/admin-dashboard/` folder (the canonical admin page is
+  `features/admin/dashboard/admin-dashboard.component.ts` at `/admin/dashboard`; the old
+  `/dashboard/admin` route just redirects there).
+- **`README.md`** now matches this repository's actual layout, commands, and demo accounts
+  — trust it alongside `docs/PROJECT_PLAN.md` and the code. `docs/PROJECT_PLAN.md` is
+  still the contract of record for schema/DTOs/endpoints, but note the Azure OpenAI vs.
+  Groq divergence above.
 
 ## COMMANDS
 
@@ -81,7 +104,8 @@ Auth is real and wired end to end; quiz/admin data is still mocked:
 
 There are **no unit tests in this project**. Spec files were removed and generation is
 disabled by default (`skipTests: true` under the component schematic in
-[angular.json](FrontEnd/angular.json)); there is no `npm test`. Formatting comes from the
+[angular.json](FrontEnd/angular.json)); there is no `npm test` script (vitest/jsdom are
+present in `devDependencies` but nothing is wired to them). Formatting comes from the
 `prettier` block in [package.json](FrontEnd/package.json) (100 cols, single quotes) — there
 is no `npm run format`.
 
@@ -104,21 +128,28 @@ claiming backend test coverage.
 Default connection string is SQL Server LocalDB
 (`Server=(localdb)\mssqllocaldb;Database=AiInstituteManagerDb`), not Azure SQL yet.
 
-`backend/package.json` wraps the above as `npm start`/`npm run build`/`npm run test`/
-`npm run db-migrate`, so `README.md`'s "simple method" still works. Its `db-reset` script
-(`rm -f AiInstituteManager.API/institute.db && dotnet ef database update`) is stale: it
-targets a SQLite file left over from an earlier design, but the live connection string is
-LocalDB, so the delete is a no-op — use `dotnet ef database update` (or drop the LocalDB
-database) to actually reset state.
+`backend/package.json` wraps the above as `npm start` (runs HTTP :5218 and HTTPS :7083
+concurrently), `npm run start-http`/`start-https` (one profile only), `npm run build`,
+`npm run test` (`dotnet test` — still finds nothing, see above), and `npm run db-migrate`
+(`dotnet ef database update --project AiInstituteManager.API`, no explicit
+`--startup-project`). Its `db-reset` script (`rimraf AiInstituteManager.API/institute.db &&
+dotnet ef database update`) is stale: it targets a SQLite file left over from an earlier
+design, but the live connection string is LocalDB, so the delete is a no-op — use
+`dotnet ef database update` (or drop the LocalDB database) to actually reset state.
+
+Secrets (`Jwt:Key`, `OpenAi:ApiKey`) are never committed — `appsettings.json` has empty
+placeholders; set real values with `dotnet user-secrets` from
+`backend/AiInstituteManager.API` (see `README.md` for the exact commands). `Program.cs`
+throws on startup in non-Development environments if either is missing.
 
 ## ARCHITECTURE
 
 ### Backend — three projects, dependencies point inward
 
 ```
-AiInstituteManager.API             Program.cs, Swagger, seeding hook  (net10.0, Web SDK)
+AiInstituteManager.API             Program.cs, Controllers/, Swagger, seeding hook  (net10.0, Web SDK)
    ↓
-AiInstituteManager.Infrastructure  DbContext, EF configurations, migrations, repos, seed
+AiInstituteManager.Infrastructure  DbContext, EF configurations, migrations, repos, seed, AiGeneration/
    ↓
 AiInstituteManager.Domain          entities + enums only — zero package references
 ```
@@ -135,12 +166,18 @@ Conventions that make new entities nearly free:
   `IEntityTypeConfiguration<T>` is picked up automatically — do not edit the DbContext to
   register it.
 - DI setup is hidden behind extension methods
-  ([ServiceCollectionExtensions](backend/AiInstituteManager.Infrastructure/Extensions/ServiceCollectionExtensions.cs))
+  ([ServiceCollectionExtensions](backend/AiInstituteManager.Infrastructure/Extensions/ServiceCollectionExtensions.cs)
+  for DbContext/Identity/JWT/OpenAI HttpClient/repos,
+  [CorsExtensions](backend/AiInstituteManager.API/Extensions/CorsExtensions.cs) for CORS)
   so `Program.cs` stays a handful of lines. Follow that pattern instead of expanding
   `Program.cs`.
 - `IGenericRepository<T>` is registered as an **open generic**, so every entity gets a
   repository from one line. `IUnitOfWork` exposes the five typed repositories and the
   single `SaveChangesAsync()`; write through the UnitOfWork, not the DbContext.
+- `IOpenAiService`/`OpenAiService` ([AiGeneration/](backend/AiInstituteManager.Infrastructure/AiGeneration/))
+  is registered via `AddHttpClient<IOpenAiService, OpenAiService>` — one pooled,
+  DI-managed `HttpClient` with base address and `Authorization: Bearer <OpenAi:ApiKey>`
+  set once from `OpenAiSettings`, not per call.
 - Seeding is idempotent by an `AnyAsync()` guard per table
   ([DbInitializer](backend/AiInstituteManager.Infrastructure/Data/Seed/DbInitializer.cs)),
   so it is safe on every startup.
@@ -161,18 +198,20 @@ Conventions that make new entities nearly free:
   clients); `features/` holds lazy-loaded pages; `shared/` holds reusable presentational
   pieces. Everything under `features/` is loaded with `loadComponent`; only the layout
   shell is eager.
-- Routing shape: `/login` sits outside the shell; everything else is a child of
-  `MainLayoutComponent`. Role-gated branches use `canActivate: [roleGuard('Teacher')]`,
-  and a blocked user is redirected to the `ROLE_HOME` entry for their own role rather than
-  bounced to login.
+- Routing shape: `/login` and `/register` sit outside the shell; everything else is a
+  child of `MainLayoutComponent`. Role-gated branches use
+  `canActivate: [roleGuard('Teacher')]` / `roleGuard('Admin')`, and a blocked user is
+  redirected to the `ROLE_HOME` entry for their own role rather than bounced to login.
 - Two dashboard generations coexist: `/dashboard/*`
-  ([features/dashboard/](FrontEnd/src/app/features/dashboard/), fed by `DashboardApi` and
-  the older `api.models.ts` shapes) and the quiz-feature routes `/teacher/*`,
-  `/student/*`, `/admin/*` (fed by `QuizService`/`AdminService` and `quiz.model.ts`).
+  ([features/dashboard/](FrontEnd/src/app/features/dashboard/), fed by the older
+  `api.models.ts` shapes) and the quiz-feature routes `/teacher/*`, `/student/*`,
+  `/admin/*` (fed by `QuizService`/`AdminService` and `quiz.model.ts`).
   **`api.models.ts` is the older contract** — it carries course/calendar/chat types with
   `string` ids and roles `'Administrator' | 'Staff'` that the quiz domain does not use.
   New quiz work belongs in `quiz.model.ts` / `user.model.ts` (numeric ids, roles
-  `'Admin' | 'Teacher' | 'Student'`).
+  `'Admin' | 'Teacher' | 'Student'`). The admin branch of `/dashboard/*` is now dead
+  (`/dashboard/admin` just redirects to the canonical `/admin/dashboard`) — see CURRENT
+  STATE above for the orphaned files this left behind.
 - Styling is Tailwind v4 CSS-first + DaisyUI v5, configured entirely in
   [styles.scss](FrontEnd/src/styles.scss) (`@import "tailwindcss"`, `@source "../app"`,
   `@plugin "daisyui"`) — **there is no `tailwind.config.js`**. Themes are limited to
@@ -191,5 +230,10 @@ Conventions that make new entities nearly free:
   should flip it implicitly.
 - TypeScript models under `core/models/` mirror the C# entities one-for-one and document
   which file they mirror. Change both sides together.
+- When wiring a new backend route into an existing frontend service method, keep the
+  "real call with mock `catchError` fallback" pattern already used throughout
+  `QuizService`/`AdminService` rather than deleting the mock outright — see CURRENT STATE.
 - **For database schema, DTO shapes, API endpoints, or the milestone roadmap, consult
-  [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md).**
+  [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md)** — but check CURRENT STATE first for where
+  the live implementation has already diverged from it (Groq vs. Azure OpenAI; endpoints
+  not yet built).
