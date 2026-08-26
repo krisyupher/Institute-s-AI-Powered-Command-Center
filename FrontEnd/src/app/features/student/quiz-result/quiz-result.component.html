@@ -8,6 +8,9 @@
     <div class="card-body items-center text-center">
       <h2 class="card-title">Quiz submitted!</h2>
       <p class="text-4xl font-bold text-primary">{{ scorePercent() }}%</p>
+      <span class="badge badge-lg" [class.badge-success]="passed()" [class.badge-error]="!passed()">
+        {{ passed() ? 'Pass' : 'Fail' }}
+      </span>
       <progress
         class="progress progress-success w-56"
         [value]="result.correctCount"
@@ -16,6 +19,9 @@
       <p class="mt-2">
         You answered <span class="font-semibold">{{ result.correctCount }}</span> out of
         <span class="font-semibold">{{ result.totalQuestions }}</span> questions correctly.
+      </p>
+      <p class="text-sm text-base-content/60">
+        Completed {{ result.completedAt | date: 'medium' }}
       </p>
       <a class="btn btn-primary btn-sm mt-4" routerLink="/student/quizzes">Back to available quizzes</a>
     </div>

@@ -21,6 +21,9 @@ import { QuizService } from '../../../core/services/quiz.service';
 export class QuizResultComponent implements OnInit {
   private readonly quizService = inject(QuizService);
 
+  /** Minimum percentage score required to pass a quiz. */
+  protected static readonly PASSING_PERCENT = 60;
+
   protected readonly justSubmitted = signal<SubmitQuizResponse | null>(null);
   protected readonly pastResults = signal<QuizResult[]>([]);
   protected readonly loading = signal(true);
@@ -30,6 +33,10 @@ export class QuizResultComponent implements OnInit {
     if (!result || result.totalQuestions === 0) return 0;
     return Math.round((result.correctCount / result.totalQuestions) * 100);
   });
+
+  protected readonly passed = computed(
+    () => this.scorePercent() >= QuizResultComponent.PASSING_PERCENT,
+  );
 
   ngOnInit(): void {
     const stateResult = (window.history.state as { result?: SubmitQuizResponse } | null)?.result;

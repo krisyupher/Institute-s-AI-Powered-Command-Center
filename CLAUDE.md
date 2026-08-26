@@ -25,8 +25,8 @@ the Backend commands note) — neither lives at the repo root.
 
 ## CURRENT STATE (read this before assuming a feature exists)
 
-Auth and quiz generation/save/list are real and wired end to end; the student flow and
-admin metrics are still mocked:
+Auth, quiz generation/save/list, and admin metrics are real and wired end to end; only the
+student flow (taking a quiz, submitting, viewing results) is still mocked:
 
 - **Auth is live.** [AuthController](backend/AiInstituteManager.API/Controllers/AuthController.cs)
   (`POST /api/auth/register`, `/login`, `GET /api/auth/me`) is implemented on top of
@@ -63,8 +63,8 @@ admin metrics are still mocked:
   implementation and `README.md` target **Groq's OpenAI-compatible endpoint**
   (`OpenAi:BaseUrl`/`OpenAi:ApiKey`/`OpenAi:Model` in `appsettings.json`, real values via
   `dotnet user-secrets` — never commit them).
-  - **Not yet implemented on the backend**: `GET /api/quiz/available` (student quiz list),
-    `POST /api/quiz/submit` (grading), and all of `/api/admin/*`. These are still
+  - **Not yet implemented on the backend**: `GET /api/quiz/available` (student quiz list)
+    and `POST /api/quiz/submit` (grading) — the rest of the student flow. These are still
     frontend-only mocks.
   - [QuizService](FrontEnd/src/app/core/services/quiz.service.ts) reflects this split
     directly: `generateQuiz`, `saveQuiz`, `deleteQuiz`, `getQuizById`, and
@@ -73,21 +73,27 @@ admin metrics are still mocked:
     down or a route isn't implemented yet); `getAvailableQuizzes`, `submitQuiz`,
     `getDraftQuiz`, `getStudentResults`, and `getSubjectStats` are still pure
     `of(MOCK…).pipe(delay(250))` with no `HttpClient` call, because there is no backend
-    route to call yet. Same pattern in
-    [AdminService.getAdminStats()](FrontEnd/src/app/core/services/admin.service.ts): real
-    call to `GET /api/admin/stats` with a mock `catchError` fallback. **When adding a new
-    backend route, follow this pattern** — try the real call, `catchError` into the
-    existing mock — rather than swapping the mock out wholesale, so the frontend degrades
-    gracefully until every route lands.
+    route to call yet. **When adding a new backend route, follow this pattern** — try the
+    real call, `catchError` into the existing mock — rather than swapping the mock out
+    wholesale, so the frontend degrades gracefully until every route lands.
+- **Admin stats are live.** [AdminController](backend/AiInstituteManager.API/Controllers/AdminController.cs)
+  (`[Authorize(Roles = "Admin")]`, route `api/admin`) implements `GET /stats`: total user
+  count via `UserManager`, total quiz count, and an average score over `QuizResults` (0
+  until the student submit flow above ships and actually populates that table).
+  [AdminService.getAdminStats()](FrontEnd/src/app/core/services/admin.service.ts) calls it
+  directly with **no mock fallback** — unlike `QuizService`, errors are surfaced through
+  [AdminDashboardComponent](FrontEnd/src/app/features/admin/dashboard/admin-dashboard.component.ts)'s
+  own `loading`/`error` signals instead.
 - **Most feature components are placeholders** rendering `<app-placeholder-page>`
   (student quiz-taking flow is not yet backed by a real endpoint; the teacher generator →
-  preview → save flow and the admin dashboard are real). Two components are currently
-  orphaned dead code — not imported by `app.routes.ts` or anything else — and can be
-  deleted or revived without touching a live path:
-  `features/admin/dashboard/admin-dashboard-page.component.ts` and the entire
-  `features/dashboard/admin-dashboard/` folder (the canonical admin page is
-  `features/admin/dashboard/admin-dashboard.component.ts` at `/admin/dashboard`; the old
-  `/dashboard/admin` route just redirects there).
+  preview → save flow and the admin dashboard are real). The canonical admin page is
+  `features/admin/dashboard/admin-dashboard.component.ts` at `/admin/dashboard`;
+  `admin-dashboard-page.component.ts` in the same folder is now just a compatibility
+  re-export of that component (kept for older imports — its own spec file still asserts the
+  old "coming soon" placeholder text and currently fails, see COMMANDS). The only remaining
+  orphaned dead code is the entire `features/dashboard/admin-dashboard/` folder (an older,
+  `QuizService`-backed mock dashboard, not imported by `app.routes.ts` — the `/dashboard/admin`
+  route just redirects to `/admin/dashboard`); it can be deleted or revived freely.
 - **`README.md`** now matches this repository's actual layout, commands, and demo accounts
   — trust it alongside `docs/PROJECT_PLAN.md` and the code. `docs/PROJECT_PLAN.md` is
   still the contract of record for schema/DTOs/endpoints, but note the Azure OpenAI vs.
@@ -102,12 +108,20 @@ admin metrics are still mocked:
 | `npm start` | Dev server on http://localhost:4200 |
 | `npm run build` | Production build (budgets: 1 MB initial, 8 kB per component style) |
 
-There are **no unit tests in this project**. Spec files were removed and generation is
-disabled by default (`skipTests: true` under the component schematic in
-[angular.json](FrontEnd/angular.json)); there is no `npm test` script (vitest/jsdom are
-present in `devDependencies` but nothing is wired to them). Formatting comes from the
-`prettier` block in [package.json](FrontEnd/package.json) (100 cols, single quotes) — there
-is no `npm run format`.
+Unit tests exist for a subset of components/services and run on **Vitest** through the
+Angular CLI's `unit-test` builder (`architect.test` in
+[angular.json](FrontEnd/angular.json), `tsConfig: tsconfig.spec.json`). There is no
+`npm test` script — run them with `npx ng test --watch=false` (drop the flag to keep Vitest
+in watch mode). New components generated via the CLI schematic do **not** get a spec by
+default (`skipTests: true` under `schematics."@schematics/angular:component"` in
+`angular.json`) — add `*.component.spec.ts` by hand when a component needs coverage. As of
+this writing 3 of ~65 tests fail on `main`: two `sidebar.component.spec.ts` cases expect a
+nav list without the "Dashboard" entry that's since been added, and
+`admin-dashboard-page.component.spec.ts` still expects the old placeholder copy now that the
+component re-exports the live admin dashboard (see CURRENT STATE) — treat these as stale
+specs to fix, not regressions to chase. Formatting comes from the `prettier` block in
+[package.json](FrontEnd/package.json) (100 cols, single quotes) — there is no
+`npm run format`.
 
 ### Backend — run from `backend/`
 
@@ -230,9 +244,11 @@ Conventions that make new entities nearly free:
   should flip it implicitly.
 - TypeScript models under `core/models/` mirror the C# entities one-for-one and document
   which file they mirror. Change both sides together.
-- When wiring a new backend route into an existing frontend service method, keep the
-  "real call with mock `catchError` fallback" pattern already used throughout
-  `QuizService`/`AdminService` rather than deleting the mock outright — see CURRENT STATE.
+- When wiring a new backend route into an existing frontend service method that still has
+  mock-backed siblings, keep the "real call with mock `catchError` fallback" pattern already
+  used throughout `QuizService` rather than deleting the mock outright — see CURRENT STATE.
+  Once every method on a service has a live backend route (as with `AdminService`), it's
+  fine to drop the fallback and handle errors in the component instead.
 - **For database schema, DTO shapes, API endpoints, or the milestone roadmap, consult
   [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md)** — but check CURRENT STATE first for where
   the live implementation has already diverged from it (Groq vs. Azure OpenAI; endpoints

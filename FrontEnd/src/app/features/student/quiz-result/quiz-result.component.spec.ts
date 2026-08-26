@@ -60,6 +60,24 @@ describe('QuizResultComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Quiz submitted!');
     expect(fixture.nativeElement.textContent).toContain('67%');
     expect(fixture.nativeElement.textContent).toContain('2');
+    expect(fixture.nativeElement.textContent).toContain('Pass');
+    expect(fixture.nativeElement.querySelector('.badge-success')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Completed');
+  });
+
+  it('shows a Fail badge when the score is below the passing threshold', () => {
+    const result: SubmitQuizResponse = {
+      quizId: 1,
+      studentId: 2,
+      score: 1,
+      totalQuestions: 3,
+      correctCount: 1,
+      completedAt: '2026-03-06T10:00:00Z',
+    };
+    const fixture = setup({ result });
+
+    expect(fixture.nativeElement.textContent).toContain('Fail');
+    expect(fixture.nativeElement.querySelector('.badge-error')).toBeTruthy();
   });
 
   it('does not show the "just submitted" card when there is no router state', () => {
