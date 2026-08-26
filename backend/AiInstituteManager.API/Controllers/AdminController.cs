@@ -49,5 +49,47 @@ namespace AiInstituteManager.API.Controllers
 
             return Ok(new AdminStatsResponse(totalUsers, quizzes.Count, averageScore));
         }
+
+        /// <summary>
+        /// GET /api/admin/quizzes — every quiz in the system with general
+        /// statistics (question count, attempt count, average score) and
+        /// the teacher who created it, for the admin all-quizzes view.
+        /// </summary>
+        [HttpGet("quizzes")]
+        public async Task<ActionResult<IReadOnlyList<AdminQuizResponse>>> GetQuizzes()
+        {
+            var quizzes = (await _unitOfWork.Quizzes.GetAllAsync())
+                .OrderByDescending(q => q.CreatedAt)
+                .ToList();
+
+            var quizIds = quizzes.Select(q => q.Id).ToList();
+            var allQuestions = await _unitOfWork.Questions.FindAsync(q => quizIds.Contains(q.QuizId));
+            var allResults = await _unitOfWork.QuizResults.FindAsync(r => quizIds.Contains(r.QuizId));
+            var subjects = await _unitOfWork.Subjects.GetAllAsync();
+            var users = await _userManager.Users.ToListAsync();
+
+            var subjectNames = subjects.ToDictionary(s => s.Id, s => s.Name);
+            var teacherNames = users.ToDictionary(u => u.Id, u => u.FullName);
+
+            var result = quizzes.Select(q =>
+            {
+                var quizResults = allResults.Where(r => r.QuizId == q.Id).ToList();
+
+                return new AdminQuizResponse(
+                    q.Id,
+                    q.Title,
+                    q.IsPublished,
+                    q.SubjectId,
+                    subjectNames.GetValueOrDefault(q.SubjectId) ?? $"Subject #{q.SubjectId}",
+                    teacherNames.GetValueOrDefault(q.CreatedByTeacherId) ?? "Unknown",
+                    allQuestions.Count(question => question.QuizId == q.Id),
+                    quizResults.Count,
+                    quizResults.Count > 0 ? Math.Round(quizResults.Average(r => r.Score), 2) : 0,
+                    q.CreatedAt,
+                    q.UpdatedAt);
+            }).ToList();
+
+            return Ok(result);
+        }
     }
 }

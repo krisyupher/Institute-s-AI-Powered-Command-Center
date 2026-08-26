@@ -10,6 +10,9 @@ import {
 } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
 
+/** Base of the quiz-list route for the current area (admin reuses this editor). */
+const QUIZ_LIST_PATH = { admin: '/admin/dashboard', teacher: '/teacher/quizzes' } as const;
+
 @Component({
   selector: 'app-quiz-preview',
   imports: [RouterLink],
@@ -37,6 +40,10 @@ export class QuizPreviewComponent implements OnInit {
   protected readonly editing = signal(false);
 
   protected readonly optionLetters: AnswerOption[] = ['A', 'B', 'C', 'D'];
+
+  /** Quiz-list route under which this editor is mounted (admin reuses it). */
+  private readonly listPath = () =>
+    this.router.url.startsWith('/admin') ? QUIZ_LIST_PATH.admin : QUIZ_LIST_PATH.teacher;
 
   constructor() {
     // IMPORTANT: this.quizId() must NOT be read here. Route params bind to
@@ -277,8 +284,8 @@ export class QuizPreviewComponent implements OnInit {
         this.published.set(true);
         this.saving.set(false);
         this.draft.set({ ...draft, isPublished: true });
-        // Back to the teacher's quiz list once the publish succeeds.
-        this.router.navigate(['/teacher/quizzes']);
+        // Back to the quiz list for the current area once the publish succeeds.
+        this.router.navigate([this.listPath()]);
       },
       error: () => {
         this.saveError.set('Could not publish the quiz. Please try again.');
@@ -287,8 +294,10 @@ export class QuizPreviewComponent implements OnInit {
     });
   }
 
-  /** Leave the editor without saving; return to the generator. */
+  /** Leave the editor without saving. */
   protected cancel(): void {
-    this.router.navigate(['/teacher/generator']);
+    // An admin editing another teacher's quiz returns to the admin list;
+    // a teacher on their own flow returns to the generator.
+    this.router.navigate([this.router.url.startsWith('/admin') ? this.listPath() : '/teacher/generator']);
   }
 }

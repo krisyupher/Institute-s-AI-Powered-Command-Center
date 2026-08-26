@@ -29,4 +29,104 @@
     </div>
   </section>
 
+  <section class="mt-6 card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title">All Quizzes</h2>
+      <p class="text-base-content/70">
+        Every quiz in the system with general statistics and the teacher who created it.
+      </p>
+      @if (quizzes().length === 0) {
+        <p class="py-4 text-base-content/70">No quizzes have been created yet.</p>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Subject</th>
+                <th>Created By</th>
+                <th>Questions</th>
+                <th>Attempts</th>
+                <th>Avg Score</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (quiz of quizzes(); track quiz.id) {
+                <tr>
+                  <td class="font-medium">{{ quiz.title }}</td>
+                  <td>{{ quiz.subjectName }}</td>
+                  <td>{{ quiz.createdByTeacherName }}</td>
+                  <td>{{ quiz.questionCount }}</td>
+                  <td>{{ quiz.attempts }}</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.badge-success]="quiz.averageScore >= 70"
+                      [class.badge-warning]="quiz.averageScore > 0 && quiz.averageScore < 70"
+                      [class.badge-ghost]="quiz.averageScore === 0"
+                    >
+                      {{ quiz.attempts > 0 ? quiz.averageScore + '%' : '—' }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (quiz.isPublished) {
+                      <span class="badge badge-success">Published</span>
+                    } @else {
+                      <span class="badge badge-ghost">Draft</span>
+                    }
+                  </td>
+                  <td>{{ quiz.createdAt | date: 'd MMM yyyy' }}</td>
+                  <td class="text-right">
+                    <a [routerLink]="['/admin/preview', quiz.id]" class="btn btn-sm btn-ghost" title="View quiz">
+                      View
+                    </a>
+                    <a
+                      [routerLink]="['/admin/preview', quiz.id]"
+                      class="btn btn-sm btn-outline btn-primary ml-2"
+                      title="Edit quiz"
+                    >
+                      Edit
+                    </a>
+                    <button
+                      (click)="askDelete(quiz)"
+                      class="btn btn-sm btn-ghost text-error ml-2"
+                      title="Delete quiz"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </section>
+  }
+
+  @if (deleteTarget(); as quiz) {
+    <dialog class="modal modal-open" (click)="cancelDelete()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h3 class="text-lg font-bold">Delete quiz</h3>
+        <p class="py-4">
+          Are you sure you want to delete <span class="font-medium">{{ quiz.title }}</span>?
+          This action cannot be undone.
+        </p>
+        <div class="modal-action">
+          <button class="btn" (click)="cancelDelete()" [disabled]="deleting()">Cancel</button>
+          <button class="btn btn-error" (click)="confirmedDelete()" [disabled]="deleting()">
+            @if (deleting()) {
+              <span class="loading loading-spinner loading-sm"></span>
+              Deleting…
+            } @else {
+              Delete
+            }
+          </button>
+        </div>
+      </div>
+    </dialog>
   }
