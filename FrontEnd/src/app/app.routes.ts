@@ -115,6 +115,17 @@ export const routes: Routes = [
                 (m) => m.AdminDashboardComponent,
               ),
           },
+          {
+            // Admin edits any teacher's quiz by reusing the same
+            // quiz-preview editor the teacher flow uses (backend now lets
+            // admins through save/delete ownership checks).
+            path: 'preview/:quizId',
+            title: 'Edit quiz',
+            loadComponent: () =>
+              import('./features/teacher/quiz-preview/quiz-preview.component').then(
+                (m) => m.QuizPreviewComponent,
+              ),
+          },
         ],
       },
 

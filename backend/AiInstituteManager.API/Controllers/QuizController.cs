@@ -23,7 +23,7 @@ namespace AiInstituteManager.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/quiz")]
-    [Authorize(Roles = "Teacher")]
+    [Authorize(Roles = "Teacher,Admin")]
     public class QuizController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -76,8 +76,12 @@ namespace AiInstituteManager.API.Controllers
                 }
                 if (existing.CreatedByTeacherId != teacherId.Value)
                 {
-                    // A teacher may only edit the quizzes they created.
-                    return Forbid();
+                    // A teacher may only edit the quizzes they created; an
+                    // admin may edit any quiz (system-wide moderation).
+                    if (!IsAdmin())
+                    {
+                        return Forbid();
+                    }
                 }
 
                 var updateSubject = await _unitOfWork.Subjects.GetByIdAsync(request.SubjectId);
@@ -165,7 +169,12 @@ namespace AiInstituteManager.API.Controllers
             }
             if (quiz.CreatedByTeacherId != teacherId.Value)
             {
-                return Forbid();
+                // A teacher may only delete the quizzes they created; an
+                // admin may delete any quiz (system-wide moderation).
+                if (!IsAdmin())
+                {
+                    return Forbid();
+                }
             }
 
             // QuizResult -> Quiz is Restrict (see QuizResultConfiguration),
@@ -265,5 +274,13 @@ namespace AiInstituteManager.API.Controllers
 
             return int.TryParse(idClaim, out var id) ? id : null;
         }
+
+        /// <summary>
+        /// True when the current principal carries the Admin role. Used to
+        /// let admins moderate (edit/delete) any teacher's quiz through the
+        /// same endpoints the teacher UI uses, while teachers stay scoped
+        /// to quizzes they own.
+        /// </summary>
+        private bool IsAdmin() => User.IsInRole("Admin");
     }
 }

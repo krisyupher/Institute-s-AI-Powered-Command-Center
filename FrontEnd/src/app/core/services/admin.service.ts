@@ -3,9 +3,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { AdminStats } from '../models/admin-stats.model';
+import { AdminQuiz, AdminStats } from '../models/admin-stats.model';
 
-/** Admin client for `GET /api/admin/stats`. */
+/** Admin client for `/api/admin/*`. */
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly http = inject(HttpClient);
@@ -13,5 +13,9 @@ export class AdminService {
 
   getAdminStats(): Observable<AdminStats> {
     return this.http.get<AdminStats>(`${this.baseUrl}/stats`);
+  }
+
+  getAdminQuizzes(): Observable<AdminQuiz[]> {
+    return this.http.get<AdminQuiz[]>(`${this.baseUrl}/quizzes`);
   }
 }
