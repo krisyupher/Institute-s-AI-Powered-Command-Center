@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 
 import { AdminStats } from '../../../core/models/admin-stats.model';
@@ -6,7 +5,7 @@ import { AdminService } from '../../../core/services/admin.service';
 
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [DatePipe],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-dashboard.component.html',
 })
