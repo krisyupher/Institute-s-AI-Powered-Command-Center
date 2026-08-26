@@ -17,7 +17,7 @@
     </div>
     <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
       <div class="card-body p-5">
-        <div class="text-3xl font-semibold leading-tight">{{ dashboard.quizzesGenerated }}</div>
+        <div class="text-3xl font-semibold leading-tight">{{ dashboard.totalQuizzes }}</div>
         <div class="text-sm text-base-content/70">Quizzes Generated</div>
       </div>
     </div>
@@ -29,43 +29,4 @@
     </div>
   </section>
 
-  <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
-    <div class="card-body">
-      <p class="card-title">Recent System Activity</p>
-      <div class="overflow-x-auto">
-        <table class="table table-sm w-full">
-          <thead>
-            <tr>
-              <th>Student Name</th>
-              <th>Quiz Title</th>
-              <th>Score Percentage</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (activity of dashboard.recentActivity; track activity.id) {
-              <tr>
-                <td>{{ activity.studentName }}</td>
-                <td>{{ activity.quizTitle }}</td>
-                <td>
-                  <span
-                    class="badge"
-                    [class.badge-success]="activity.score >= 70"
-                    [class.badge-warning]="activity.score < 70"
-                  >
-                    {{ activity.score }}%
-                  </span>
-                </td>
-                <td>{{ activity.completedAt | date: 'd MMM' }}</td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="4" class="text-center text-base-content/70">No recent activity.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-}
+  }
