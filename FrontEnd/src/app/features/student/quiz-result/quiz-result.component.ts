@@ -38,6 +38,11 @@ export class QuizResultComponent implements OnInit {
     () => this.scorePercent() >= QuizResultComponent.PASSING_PERCENT,
   );
 
+  /** True when a historical result's score meets the passing threshold. */
+  protected isPassed(result: QuizResult): boolean {
+    return result.score >= QuizResultComponent.PASSING_PERCENT;
+  }
+
   ngOnInit(): void {
     const stateResult = (window.history.state as { result?: SubmitQuizResponse } | null)?.result;
     if (stateResult) {

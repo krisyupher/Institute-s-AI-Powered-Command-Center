@@ -12,13 +12,14 @@
     <!-- Upcoming Quizzes -->
     <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
       <div class="card-body p-5">
-        <p class="card-title">Next Upcoming Quizzes</p>
-        <div class="space-y-3">
-          <div class="border-t border-base-200 pt-2">
+        <h2 class="card-title text-lg font-semibold">Next Upcoming Quizzes</h2>
+        <div class="mt-2 max-h-64 overflow-y-auto pr-1">
+          <div class="border-t border-base-200 pt-3">
             <div class="text-sm text-base-content/70">Available Quizzes</div>
             @for (quiz of upcomingQuizzes(); track quiz.id) {
-              <div class="text-xl font-medium">
-                {{ quiz.title }}
+              <div class="py-2">
+                <div class="text-base font-medium">{{ quiz.title }}</div>
+                <div class="text-xs text-base-content/60">Quiz #{{ quiz.id }}</div>
               </div>
             }
           </div>
@@ -32,26 +33,28 @@
     <!-- Recent Results -->
     <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
       <div class="card-body p-5">
-        <p class="card-title">Your Quiz Results</p>
-        @if (recentResults().length > 0) {
-          @for (result of recentResults(); track result.id) {
-            <div class="border-t border-base-200 pt-2">
-              <div class="text-sm text-base-content/70">
-                Quiz #{{ result.quizId }}
+        <h2 class="card-title text-lg font-semibold">Your Quiz Results</h2>
+        <div class="mt-2 max-h-64 overflow-y-auto pr-1">
+          @if (recentResults().length > 0) {
+            @for (result of recentResults(); track result.id) {
+              <div class="border-t border-base-200 pt-3">
+                <div class="text-sm text-base-content/70">
+                  Quiz #{{ result.quizId }}
+                </div>
+                <div class="text-base-content/90 font-medium text-lg mb-1">
+                  Score: {{ result.score }}
+                </div>
+                <div class="text-xs text-base-content/60">
+                  Completed: {{ result.completedAt | date: 'd MMM' }}
+                </div>
               </div>
-              <div class="text-base-content/90 font-medium text-lg mb-1">
-                Score: {{ result.score }}
-              </div>
-              <div class="text-xs text-base-content/60">
-                Completed: {{ result.completedAt | date: 'd MMM' }}
-              </div>
+            }
+          } @else {
+            <div class="text-sm text-base-content/70">
+              You haven't taken any quizzes yet
             </div>
           }
-        } @else {
-          <div class="text-sm text-base-content/70">
-            You haven't taken any quizzes yet
-          </div>
-        }
+        </div>
       </div>
     </div>
   </section>

@@ -43,6 +43,7 @@
             <tr>
               <th>Quiz</th>
               <th>Score</th>
+              <th>Result</th>
               <th>Completed</th>
             </tr>
           </thead>
@@ -50,7 +51,16 @@
             @for (result of pastResults(); track result.id) {
               <tr>
                 <td>Quiz #{{ result.quizId }}</td>
-                <td>{{ result.score }}</td>
+                <td>{{ result.score }}%</td>
+                <td>
+                  <span
+                    class="badge badge-sm"
+                    [class.badge-success]="isPassed(result)"
+                    [class.badge-error]="!isPassed(result)"
+                  >
+                    {{ isPassed(result) ? 'Pass' : 'Fail' }}
+                  </span>
+                </td>
                 <td>{{ result.completedAt | date: 'mediumDate' }}</td>
               </tr>
             }
