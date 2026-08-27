@@ -3,8 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, map, of, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { decodeSession, mintMockToken } from '../auth/jwt';
-import { MOCK_USERS } from '../mock/mock-data';
+import { decodeSession } from '../auth/jwt';
 import { LoginRequest, LoginResponse, RegisterRequest, sessionToUser } from '../models/auth.model';
 import { User, UserRole } from '../models/user.model';
 
@@ -107,19 +106,6 @@ export class AuthService {
   /** Returns the currently signed-in user, or `null` when signed out. */
   getCurrentUser(): Observable<User | null> {
     return of(this.isAuthenticated() ? this.user() : null);
-  }
-
-  /**
-   * Test-only helper: signs in as the mock user for `role` without a login round-trip, so
-   * specs can set up an authenticated session in one call instead of mocking an HTTP
-   * request. Not called from any production UI — the real app only ever authenticates
-   * through `login()` against the database. Kept on the service (rather than test-only
-   * code) because it mints a real, decodable session, so guards and the interceptor
-   * exercise the exact same code path a genuine sign-in would.
-   */
-  setRole(role: UserRole): void {
-    const user = MOCK_USERS.find((candidate) => candidate.role === role);
-    this.storeToken(user ? mintMockToken(user) : null);
   }
 
   private storeToken(token: string | null): void {

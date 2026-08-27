@@ -1,5 +1,5 @@
 /**
- * JWT helpers: decoding a token into a `Session`, and (dev only) minting a mock token.
+ * JWT helpers: decoding a token into a `Session`.
  *
  * Nothing here verifies a signature — that is the API's job. The frontend only reads
  * claims to render the shell and gate routes; the server re-checks every request.
@@ -52,15 +52,6 @@ function base64UrlDecode(segment: string): string {
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
   return new TextDecoder().decode(bytes);
-}
-
-function base64UrlEncode(text: string): string {
-  const bytes = new TextEncoder().encode(text);
-  let binary = '';
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /** First non-empty value among the aliases; JWT roles may arrive as an array. */
@@ -128,28 +119,4 @@ export function decodeSession(token: string | null, now = Date.now()): Session |
     role: role as UserRole,
     expiresAt: exp,
   };
-}
-
-/**
- * Builds an UNSIGNED token that decodes like the real thing.
- *
- * Development only: it exists so the app is usable before backend Ticket 2.2 ships, and
- * so the demo role switch produces a genuine session. The signature segment is the
- * literal string `mock-signature`, so the API will reject it — which is exactly right.
- */
-export function mintMockToken(
-  user: { id: number; fullName: string; email: string; role: UserRole },
-  ttlHours = 8,
-): string {
-  const header = base64UrlEncode(JSON.stringify({ alg: 'none', typ: 'JWT' }));
-  const payload = base64UrlEncode(
-    JSON.stringify({
-      nameid: String(user.id),
-      unique_name: user.fullName,
-      email: user.email,
-      role: user.role,
-      exp: Math.floor(Date.now() / 1000) + ttlHours * 3600,
-    }),
-  );
-  return `${header}.${payload}.mock-signature`;
 }

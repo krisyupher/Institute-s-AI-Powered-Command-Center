@@ -76,24 +76,30 @@ export interface SubmitQuizRequest {
   answers: Record<number, AnswerOption>;
 }
 
-// Shape returned by `POST /api/quiz/submit` alongside recording a `QuizResult`
+// Shape returned by `POST /api/quiz/submit` alongside recording a `QuizResult`.
+// `studentId` isn't part of the real backend response (QuizResultResponse has no
+// student field — it's implicit from the auth token) so it stays optional rather
+// than being filled with a fabricated value.
 export interface SubmitQuizResponse {
   quizId: number;
-  studentId: number;
+  studentId?: number;
   score: number;
   totalQuestions: number;
   correctCount: number;
   completedAt: string;
 }
 
-// A quiz as a student sees it: expanded navigation, no correct answers leaked
+// A quiz as a student sees it: expanded navigation, no correct answers leaked.
+// `createdByTeacher`/`publishedAt` aren't part of the real backend response
+// (AvailableQuizResponse only has id/title/subjectId/questions) so they stay
+// optional rather than being filled with fabricated values.
 export interface AvailableQuiz {
   id: number;
   title: string;
   subject: Subject;
-  createdByTeacher: Pick<User, 'id' | 'fullName'>;
+  createdByTeacher?: Pick<User, 'id' | 'fullName'>;
   questionCount: number;
-  publishedAt: string;
+  publishedAt?: string;
 }
 
 // -----------------------------------------------------------------------

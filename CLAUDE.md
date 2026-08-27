@@ -25,8 +25,10 @@ the Backend commands note) — neither lives at the repo root.
 
 ## CURRENT STATE (read this before assuming a feature exists)
 
-Auth, quiz generation/save/list, and admin metrics are real and wired end to end; only the
-student flow (taking a quiz, submitting, viewing results) is still mocked:
+Every quiz/auth/admin feature is real and wired end to end against the database — **there
+is no mock data or fallback anywhere in the frontend** (`core/mock/` was deleted). A down
+or unreachable backend now surfaces as a real error in the UI, not a silently-served fake
+response.
 
 - **Auth is live.** [AuthController](backend/AiInstituteManager.API/Controllers/AuthController.cs)
   (`POST /api/auth/register`, `/login`, `GET /api/auth/me`) is implemented on top of
@@ -42,62 +44,67 @@ student flow (taking a quiz, submitting, viewing results) is still mocked:
   `app.config.ts`) attaches `Authorization: Bearer <token>` to every other outgoing
   request. `AuthService.session`/`isAuthenticated`/`role` are all `computed()` from
   decoding the JWT in `localStorage` (`core/auth/jwt.ts`) — there is no separate
-  "logged in" flag to fall out of sync. `AuthService.setRole()` is a **test-only** helper
-  (mints a session locally so specs don't need to mock HTTP); nothing in the production UI
-  calls it — the real app only ever authenticates through `login()`/`register()` against
-  the database.
+  "logged in" flag to fall out of sync. The app only ever authenticates through
+  `login()`/`register()` against the database.
   - CORS is configured via [CorsExtensions.cs](backend/AiInstituteManager.API/Extensions/CorsExtensions.cs)
     (`Cors:AllowedOrigins` in `appsettings.json`, defaults to `http://localhost:4200`).
     `environment.apiBaseUrl` points at the HTTPS profile (`https://localhost:7083`)
     directly rather than the HTTP one — the API calls `UseHttpsRedirection()`, so hitting
     HTTP just 307-redirects, and CORS preflights don't reliably survive a redirect.
-- **Quiz generate/save/list/delete are live.**
+- **The full quiz lifecycle is live**, teacher and student sides both.
   [QuizController](backend/AiInstituteManager.API/Controllers/QuizController.cs)
-  (`[Authorize(Roles = "Teacher")]`, route `api/quiz`) implements `POST /generate` (calls
-  `IOpenAiService`), `POST /save` (create or, when `id` is supplied, replace-in-place; a
-  teacher may only edit/delete quizzes they created), `GET /{id}`, `DELETE /{id}`, and
-  `GET /my-quizzes`. It is built against `IUnitOfWork` and `IOpenAiService` (interfaces),
-  not concrete classes, so swapping either implementation needs zero controller changes.
+  (`[Authorize(Roles = "Teacher,Admin")]`, route `api/quiz`) implements `POST /generate`
+  (calls `IOpenAiService`), `POST /save` (create or, when `id` is supplied,
+  replace-in-place — a teacher may only edit/delete quizzes they created, an admin may edit
+  any), `GET /{id}`, `DELETE /{id}`, and `GET /my-quizzes`.
+  [StudentQuizController](backend/AiInstituteManager.API/Controllers/StudentQuizController.cs)
+  (`[Authorize(Roles = "Student")]`, same `api/quiz` route prefix) implements
+  `GET /available` (published quizzes with correct answers withheld server-side — not just
+  hidden client-side), `POST /submit` (grades against the DB's real answers, records a
+  `QuizResult`, returns the score instantly), and `GET /results` (the calling student's own
+  result history). [SubjectsController](backend/AiInstituteManager.API/Controllers/SubjectsController.cs)
+  (`[Authorize]`, route `api/subjects`) implements `GET` for the subject catalog. Both new
+  controllers are built against `IUnitOfWork`, matching the existing pattern.
   `POST /api/quiz/generate` calls out to an OpenAI-*compatible* REST API — see
   `OpenAiSettings` below; `docs/PROJECT_PLAN.md` says "Azure OpenAI" but the current
   implementation and `README.md` target **Groq's OpenAI-compatible endpoint**
   (`OpenAi:BaseUrl`/`OpenAi:ApiKey`/`OpenAi:Model` in `appsettings.json`, real values via
-  `dotnet user-secrets` — never commit them).
-  - **Not yet implemented on the backend**: `GET /api/quiz/available` (student quiz list)
-    and `POST /api/quiz/submit` (grading) — the rest of the student flow. These are still
-    frontend-only mocks.
-  - [QuizService](FrontEnd/src/app/core/services/quiz.service.ts) reflects this split
-    directly: `generateQuiz`, `saveQuiz`, `deleteQuiz`, `getQuizById`, and
-    `getTeacherQuizzes` call the real `${apiBaseUrl}/api/quiz/*` endpoints first and
-    `catchError` into an equivalent mock response (so the UI keeps working if the API is
-    down or a route isn't implemented yet); `getAvailableQuizzes`, `submitQuiz`,
-    `getDraftQuiz`, `getStudentResults`, and `getSubjectStats` are still pure
-    `of(MOCK…).pipe(delay(250))` with no `HttpClient` call, because there is no backend
-    route to call yet. **When adding a new backend route, follow this pattern** — try the
-    real call, `catchError` into the existing mock — rather than swapping the mock out
-    wholesale, so the frontend degrades gracefully until every route lands.
+  `dotnet user-secrets` — never commit them). Without a working key, `POST /generate`
+  fails (500) and the frontend now shows a real error — it no longer serves a synthesized
+  fake draft.
+  - [QuizService](FrontEnd/src/app/core/services/quiz.service.ts) calls every one of these
+    routes directly with no `catchError` fallback. `getQuizById` is the one place with
+    branching logic: it tries the teacher/admin `GET /api/quiz/{id}` first (has real
+    correct answers, needed for editing) and, on any error — a student token gets a 403
+    there — falls back to `GET /api/quiz/available` and picks the matching id; that's
+    real-endpoint routing by role, not a mock fallback. `getDraftQuiz()` (used only when
+    `/teacher/preview` is reached without router state, e.g. a hard refresh) derives the
+    teacher's most recent unpublished quiz from the real `GET /api/quiz/my-quizzes` list
+    rather than reading a hardcoded demo quiz.
 - **Admin stats are live.** [AdminController](backend/AiInstituteManager.API/Controllers/AdminController.cs)
-  (`[Authorize(Roles = "Admin")]`, route `api/admin`) implements `GET /stats`: total user
-  count via `UserManager`, total quiz count, and an average score over `QuizResults` (0
-  until the student submit flow above ships and actually populates that table).
+  (`[Authorize(Roles = "Admin")]`, route `api/admin`) implements `GET /stats` (total users,
+  total quizzes, average score across `QuizResults`) and `GET /quizzes` (every quiz with
+  question/attempt/average-score stats and the owning teacher's name, for the admin
+  all-quizzes view).
   [AdminService.getAdminStats()](FrontEnd/src/app/core/services/admin.service.ts) calls it
-  directly with **no mock fallback** — unlike `QuizService`, errors are surfaced through
+  directly; errors are surfaced through
   [AdminDashboardComponent](FrontEnd/src/app/features/admin/dashboard/admin-dashboard.component.ts)'s
-  own `loading`/`error` signals instead.
-- **Most feature components are placeholders** rendering `<app-placeholder-page>`
-  (student quiz-taking flow is not yet backed by a real endpoint; the teacher generator →
-  preview → save flow and the admin dashboard are real). The canonical admin page is
+  own `loading`/`error` signals.
+- **Every feature page is real** (generator → preview → publish, quiz list, take-quiz,
+  available-quizzes, results, admin dashboard) — none are `<app-placeholder-page>` stubs
+  anymore. The canonical admin page is
   `features/admin/dashboard/admin-dashboard.component.ts` at `/admin/dashboard`;
   `admin-dashboard-page.component.ts` in the same folder is now just a compatibility
   re-export of that component (kept for older imports — its own spec file still asserts the
   old "coming soon" placeholder text and currently fails, see COMMANDS). The only remaining
-  orphaned dead code is the entire `features/dashboard/admin-dashboard/` folder (an older,
-  `QuizService`-backed mock dashboard, not imported by `app.routes.ts` — the `/dashboard/admin`
-  route just redirects to `/admin/dashboard`); it can be deleted or revived freely.
+  orphaned dead code is the entire `features/dashboard/admin-dashboard/` folder (an older
+  mock-era dashboard, not imported by `app.routes.ts` — the `/dashboard/admin` route just
+  redirects to `/admin/dashboard`); it can be deleted or revived freely.
 - **`README.md`** now matches this repository's actual layout, commands, and demo accounts
   — trust it alongside `docs/PROJECT_PLAN.md` and the code. `docs/PROJECT_PLAN.md` is
   still the contract of record for schema/DTOs/endpoints, but note the Azure OpenAI vs.
-  Groq divergence above.
+  Groq divergence above, and that it predates the `/api/quiz/results` and `/api/subjects`
+  endpoints.
 
 ## COMMANDS
 
@@ -208,10 +215,10 @@ Conventions that make new entities nearly free:
   requests get their `Authorization` header from the functional `authInterceptor`
   (registered via `provideHttpClient(withInterceptors([authInterceptor]))`), not from
   individual services.
-- `core/` holds cross-cutting concerns (layout shell, guards, models, mock data, service
-  clients); `features/` holds lazy-loaded pages; `shared/` holds reusable presentational
-  pieces. Everything under `features/` is loaded with `loadComponent`; only the layout
-  shell is eager.
+- `core/` holds cross-cutting concerns (layout shell, guards, models, service clients);
+  `features/` holds lazy-loaded pages; `shared/` holds reusable presentational pieces.
+  Everything under `features/` is loaded with `loadComponent`; only the layout shell is
+  eager.
 - Routing shape: `/login` and `/register` sit outside the shell; everything else is a
   child of `MainLayoutComponent`. Role-gated branches use
   `canActivate: [roleGuard('Teacher')]` / `roleGuard('Admin')`, and a blocked user is
@@ -244,11 +251,9 @@ Conventions that make new entities nearly free:
   should flip it implicitly.
 - TypeScript models under `core/models/` mirror the C# entities one-for-one and document
   which file they mirror. Change both sides together.
-- When wiring a new backend route into an existing frontend service method that still has
-  mock-backed siblings, keep the "real call with mock `catchError` fallback" pattern already
-  used throughout `QuizService` rather than deleting the mock outright — see CURRENT STATE.
-  Once every method on a service has a live backend route (as with `AdminService`), it's
-  fine to drop the fallback and handle errors in the component instead.
+- There is no mock data in the frontend — every service method calls its real backend
+  route and lets errors propagate; components handle them via their own `loading`/`error`
+  signals. Don't reintroduce a `catchError`-to-mock fallback for new work.
 - **For database schema, DTO shapes, API endpoints, or the milestone roadmap, consult
   [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md)** — but check CURRENT STATE first for where
   the live implementation has already diverged from it (Groq vs. Azure OpenAI; endpoints

@@ -42,4 +42,8 @@ namespace AiInstituteManager.API.Contracts.Quiz
         double ScorePercentage,
         DateTime CompletedAt,
         IReadOnlyList<QuestionResultResponse> QuestionResults);
+
+    /// <summary>One row of the current student's own result history — GET /api/quiz/results.</summary>
+    public record QuizResultHistoryResponse(
+        int Id, int QuizId, int StudentId, double Score, DateTime CompletedAt, DateTime CreatedAt, DateTime? UpdatedAt);
 }

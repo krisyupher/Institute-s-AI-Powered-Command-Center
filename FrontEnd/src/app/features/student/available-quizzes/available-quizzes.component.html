@@ -24,7 +24,10 @@
           <span class="badge badge-ghost badge-sm w-fit">{{ quiz.subject.name }}</span>
           <h2 class="card-title text-lg">{{ quiz.title }}</h2>
           <p class="text-sm text-base-content/70">
-            {{ quiz.questionCount }} questions &middot; by {{ quiz.createdByTeacher.fullName }}
+            {{ quiz.questionCount }} questions
+            @if (quiz.createdByTeacher; as teacher) {
+              &middot; by {{ teacher.fullName }}
+            }
           </p>
           <div class="card-actions justify-end mt-2">
             <a class="btn btn-primary btn-sm" [routerLink]="['/student/quizzes', quiz.id]">

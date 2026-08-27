@@ -59,7 +59,7 @@ describe('QuizPreviewComponent', () => {
     history.replaceState(null, '');
   });
 
-  it('falls back to the mock draft (and flags it as fallback data) when there is no route id or router-state draft', () => {
+  it('falls back to the most recent draft (and flags it as fallback data) when there is no route id or router-state draft', () => {
     const fixture = setup({ getDraftQuiz: () => of(DRAFT) });
 
     const titleInput: HTMLInputElement = fixture.nativeElement.querySelector(
@@ -67,7 +67,7 @@ describe('QuizPreviewComponent', () => {
     );
     expect(titleInput.value).toBe(DRAFT.title);
     expect(fixture.nativeElement.querySelector('.alert-info')?.textContent).toContain(
-      'fallback demo draft',
+      'most recent unpublished draft',
     );
   });
 
