@@ -24,6 +24,9 @@ export class QuizGeneratorComponent {
   protected readonly loadingSubjects = signal(true);
   protected readonly subjectsError = signal<string | null>(null);
 
+  protected readonly showCustomSubject = signal(false);
+  protected readonly customSubjectName = signal('');
+
   protected readonly generating = signal(false);
   protected readonly generateError = signal<string | null>(null);
 
@@ -42,6 +45,16 @@ export class QuizGeneratorComponent {
     return this.form.controls.topic;
   }
 
+  protected onSubjectChange(value: string): void {
+    if (value === 'another') {
+      this.showCustomSubject.set(true);
+      this.form.controls.subjectId.reset();
+    } else {
+      this.showCustomSubject.set(false);
+      this.customSubjectName.set('');
+    }
+  }
+
   constructor() {
     this.quizApi.getSubjectStats().subscribe({
       next: (subjects) => {
@@ -58,6 +71,13 @@ export class QuizGeneratorComponent {
   protected submit(): void {
     if (this.generating()) return;
 
+    if (this.showCustomSubject()) {
+      if (!this.customSubjectName().trim()) {
+        this.generateError.set('Please enter a subject name.');
+        return;
+      }
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -67,9 +87,12 @@ export class QuizGeneratorComponent {
     this.generateError.set(null);
 
     const { subjectId, difficulty, topic, questionCount } = this.form.getRawValue();
+    const finalSubjectId = this.showCustomSubject()
+      ? -1
+      : subjectId!;
 
     this.quizApi
-      .generateQuiz({ subjectId: subjectId!, difficulty, topic, questionCount })
+      .generateQuiz({ subjectId: finalSubjectId, difficulty, topic, questionCount })
       .subscribe({
         // Draft ready: hand it straight to the preview-edit screen via router
         // state (no static link/banner), where the teacher reviews and edits.
