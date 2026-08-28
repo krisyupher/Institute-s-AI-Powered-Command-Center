@@ -15,13 +15,13 @@
           class="select select-bordered w-full"
           formControlName="subjectId"
           [class.select-error]="subjectId.invalid && subjectId.touched"
-          (change)="onSubjectChange($any($event.target).value)"
+          (change)="onSubjectChange($any(form.get('subjectId')?.value))"
         >
           <option [ngValue]="null" disabled>Select a subject</option>
           @for (subject of subjects(); track subject.id) {
             <option [ngValue]="subject.id">{{ subject.name }} ({{ subject.code }})</option>
           }
-          <option value="another">Another</option>
+          <option [ngValue]="-1">Another</option>
         </select>
         @if (loadingSubjects()) {
           <span class="label-text-alt mt-1 text-base-content/60">Loading subjects…</span>
