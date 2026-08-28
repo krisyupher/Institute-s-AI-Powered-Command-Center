@@ -15,20 +15,38 @@
           class="select select-bordered w-full"
           formControlName="subjectId"
           [class.select-error]="subjectId.invalid && subjectId.touched"
+          (change)="onSubjectChange($any($event.target).value)"
         >
           <option [ngValue]="null" disabled>Select a subject</option>
           @for (subject of subjects(); track subject.id) {
             <option [ngValue]="subject.id">{{ subject.name }} ({{ subject.code }})</option>
           }
+          <option value="another">Another</option>
         </select>
         @if (loadingSubjects()) {
           <span class="label-text-alt mt-1 text-base-content/60">Loading subjects…</span>
         } @else if (subjectsError()) {
           <span class="label-text-alt mt-1 text-error">{{ subjectsError() }}</span>
-        } @else if (subjectId.invalid && subjectId.touched) {
+        } @else if (subjectId.invalid && subjectId.touched && !showCustomSubject()) {
           <span class="label-text-alt mt-1 text-error">Choose a subject.</span>
         }
       </label>
+
+      @if (showCustomSubject()) {
+        <label class="form-control w-full">
+          <span class="label-text mb-1">Subject name</span>
+          <input
+            type="text"
+            class="input input-bordered w-full"
+            [value]="customSubjectName()"
+            (input)="customSubjectName.set($any($event.target).value)"
+            placeholder="e.g. Advanced Data Science"
+          />
+          <span class="label-text-alt mt-1 text-base-content/60">
+            Enter a new subject that will be available for future quizzes.
+          </span>
+        </label>
+      }
 
       <label class="form-control w-full">
         <span class="label-text mb-1">Difficulty</span>
