@@ -10,9 +10,12 @@ namespace AiInstituteManager.Domain.Entities
         // Foreign keys are plain ints here — the *meaning* of the FK
         // relationship (cascade rules, indexes, uniqueness) is
         // Infrastructure's job, configured in QuizConfiguration.cs.
+        // NEW — null means unlimited attempts. A migration will add this as
+        // a nullable column, so every existing quiz defaults to unlimited,
+        // no behavior change for quizzes that already exist.
+        public int? MaxAttempts { get; set; }
         public int SubjectId { get; set; }
         public Subject? Subject { get; set; }
-
         public int CreatedByTeacherId { get; set; }
         public User? CreatedByTeacher { get; set; }
 

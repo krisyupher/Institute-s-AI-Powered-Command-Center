@@ -93,6 +93,7 @@ namespace AiInstituteManager.API.Controllers
                 existing.Title = request.Title;
                 existing.SubjectId = request.SubjectId;
                 existing.IsPublished = request.IsPublished;
+                existing.MaxAttempts = request.MaxAttempts;
                 existing.MarkAsUpdated();
 
                 // Replace the question set wholesale — the teacher's edited
@@ -105,7 +106,7 @@ namespace AiInstituteManager.API.Controllers
                 await AddQuestionsAsync(quizId, request.Questions);
 
                 await _unitOfWork.SaveChangesAsync();
-                return Ok(new QuizResponse(existing.Id, existing.Title, existing.SubjectId, existing.IsPublished, request.Questions.Count));
+                return Ok(new QuizResponse(existing.Id, existing.Title, existing.SubjectId, existing.IsPublished, request.Questions.Count, existing.MaxAttempts));
             }
 
             var subject = await _unitOfWork.Subjects.GetByIdAsync(request.SubjectId);
@@ -120,6 +121,7 @@ namespace AiInstituteManager.API.Controllers
                 SubjectId = request.SubjectId,
                 CreatedByTeacherId = teacherId.Value,
                 IsPublished = request.IsPublished,
+                MaxAttempts = request.MaxAttempts,
             };
 
             await _unitOfWork.Quizzes.AddAsync(quiz);
@@ -127,7 +129,7 @@ namespace AiInstituteManager.API.Controllers
             await AddQuestionsAsync(quiz.Id, request.Questions);
             await _unitOfWork.SaveChangesAsync();
 
-            return Ok(new QuizResponse(quiz.Id, quiz.Title, quiz.SubjectId, quiz.IsPublished, request.Questions.Count));
+            return Ok(new QuizResponse(quiz.Id, quiz.Title, quiz.SubjectId, quiz.IsPublished, request.Questions.Count, quiz.MaxAttempts));
         }
 
         /// <summary>
@@ -257,7 +259,7 @@ namespace AiInstituteManager.API.Controllers
 
             return new QuizDetailResponse(
                 quiz.Id, quiz.Title, quiz.IsPublished, quiz.SubjectId,
-                quiz.CreatedByTeacherId, mapped, quiz.CreatedAt, quiz.UpdatedAt);
+                quiz.CreatedByTeacherId, mapped, quiz.CreatedAt, quiz.UpdatedAt, quiz.MaxAttempts);
         }
 
         /// <summary>
