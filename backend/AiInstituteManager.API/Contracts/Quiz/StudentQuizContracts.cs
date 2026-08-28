@@ -2,12 +2,28 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AiInstituteManager.API.Contracts.Quiz
 {
+    /// <summary>
+    /// One question as shown to a student taking a quiz. CorrectAnswer is
+    /// intentionally NOT a property here — not stripped out at response
+    /// time, but structurally absent, so there's no leak to accidentally
+    /// forget to redact later.
+    /// </summary>
     public record StudentQuestionResponse(
         int Id, string Text, string OptionA, string OptionB, string OptionC, string OptionD);
 
-    /// <summary>A published quiz available for a student to take, returned by GET /api/quiz/available.</summary>
+    /// <summary>
+    /// A published quiz available for a student to take, returned by
+    /// GET /api/quiz/available. MaxAttempts/AttemptsUsed let the frontend
+    /// show "2 of 3 attempts used" and disable the "take quiz" button once
+    /// the limit is reached, without a second round-trip.
+    /// </summary>
     public record AvailableQuizResponse(
-        int Id, string Title, int SubjectId, IReadOnlyList<StudentQuestionResponse> Questions);
+        int Id,
+        string Title,
+        int SubjectId,
+        IReadOnlyList<StudentQuestionResponse> Questions,
+        int? MaxAttempts,
+        int AttemptsUsed);
 
     /// <summary>One answer a student selected for a specific question.</summary>
     public record SubmitAnswerRequest
