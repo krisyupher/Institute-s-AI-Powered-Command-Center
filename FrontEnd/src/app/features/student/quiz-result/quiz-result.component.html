@@ -26,6 +26,43 @@
       <a class="btn btn-primary btn-sm mt-4" routerLink="/student/quizzes">Back to available quizzes</a>
     </div>
   </section>
+
+  @if (result.questionResults && result.questionResults.length > 0) {
+    <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title text-base">Question review</h2>
+        <ul class="space-y-4">
+          @for (qr of result.questionResults; track qr.questionId) {
+            <li class="border border-base-200 rounded-xl p-3">
+              <div class="flex items-start justify-between gap-3">
+                <p class="font-medium">{{ qr.text }}</p>
+                <span
+                  class="badge badge-sm shrink-0"
+                  [class.badge-success]="qr.isCorrect"
+                  [class.badge-error]="!qr.isCorrect"
+                >
+                  {{ qr.isCorrect ? 'Correct' : 'Incorrect' }}
+                </span>
+              </div>
+              <p class="mt-1 text-sm" [class.text-base-content/70]="qr.isCorrect">
+                Your answer:
+                @if (qr.isCorrect) {
+                  <span class="font-semibold text-success">{{ qr.selectedAnswer }}</span>
+                } @else {
+                  <span class="font-semibold text-error">{{ qr.selectedAnswer }}</span>
+                }
+              </p>
+              @if (!qr.isCorrect) {
+                <p class="text-sm text-base-content/70">
+                  Correct answer: <span class="font-semibold">{{ qr.correctAnswer }}</span>
+                </p>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    </section>
+  }
 }
 
 @if (loading()) {

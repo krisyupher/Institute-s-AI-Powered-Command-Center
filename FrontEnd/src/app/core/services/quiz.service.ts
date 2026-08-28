@@ -4,6 +4,7 @@ import { Observable, catchError, forkJoin, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import {
+  AnswerOption,
   AvailableQuiz,
   GeneratedQuestion,
   GenerateQuizRequest,
@@ -42,6 +43,12 @@ interface QuizResultDto {
   totalQuestions: number;
   scorePercentage: number;
   completedAt: string;
+  questionResults: {
+    questionId: number;
+    selectedAnswer: string;
+    correctAnswer: string;
+    isCorrect: boolean;
+  }[];
 }
 
 // Quiz client. Every method calls the live backend (/api/quiz, /api/subjects) —
@@ -219,6 +226,13 @@ export class QuizService {
           totalQuestions: dto.totalQuestions,
           correctCount: dto.correctCount,
           completedAt: dto.completedAt,
+          questionResults: (dto.questionResults ?? []).map((r) => ({
+            questionId: r.questionId,
+            text: '',
+            selectedAnswer: r.selectedAnswer as AnswerOption,
+            correctAnswer: r.correctAnswer as AnswerOption,
+            isCorrect: r.isCorrect,
+          })),
         }),
       ),
     );
