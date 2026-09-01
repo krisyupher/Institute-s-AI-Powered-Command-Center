@@ -161,6 +161,33 @@ namespace AiInstituteManager.API.Controllers
                 questionResults));
         }
 
+        /// <summary>
+        /// GET /api/quiz/results — every QuizResult recorded for the current
+        /// student, most recent first, for the "My Results" history table.
+        /// </summary>
+        [HttpGet("results")]
+        public async Task<ActionResult<IReadOnlyList<QuizResultHistoryResponse>>> GetResults()
+        {
+            var studentId = GetCurrentUserId();
+            if (studentId is null)
+            {
+                return Unauthorized(new { message = "Could not determine the current student's identity from the token." });
+            }
+
+            var results = (await _unitOfWork.QuizResults.FindAsync(r => r.StudentId == studentId.Value))
+                .OrderByDescending(r => r.CompletedAt)
+                .Select(r => new QuizResultHistoryResponse(
+                    r.Id, r.QuizId, r.StudentId, r.Score, r.CompletedAt, r.CreatedAt, r.UpdatedAt))
+                .ToList();
+
+            return Ok(results);
+        }
+
+        /// <summary>
+        /// Same claim-reading pattern as QuizController.GetCurrentUserId —
+        /// duplicated rather than shared, matching the existing codebase's
+        /// current style (no shared base controller exists yet).
+        /// </summary>
         private int? GetCurrentUserId()
         {
             var idClaim = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
