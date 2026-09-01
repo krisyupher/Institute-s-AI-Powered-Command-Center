@@ -136,9 +136,19 @@ export class TakeQuizComponent implements OnInit {
       next: (result) => {
         this.submitting.set(false);
         this.showConfirm.set(false);
-        // Ticket 4.4 reads this from router state; falls back to a fresh
-        // fetch of the student's results if reached without it (refresh, etc).
-        this.router.navigate(['/student/results'], { state: { result } });
+        // The backend verdict (QuestionResultResponse) carries no question
+        // text, so enrich each row with the text from the quiz we still hold
+        // in memory before handing the whole thing to the results card via
+        // router state. Ticket 4.4 reads this from router state; falls back
+        // to a fresh fetch of the student's results if it misses it
+        // (refresh, etc).
+        const questionResults = (result.questionResults ?? []).map((r) => {
+          const q = quiz.questions.find((x) => x.id === r.questionId);
+          return { ...r, text: q?.text ?? `Question #${r.questionId}` };
+        });
+        this.router.navigate(['/student/results'], {
+          state: { result: { ...result, questionResults } },
+        });
       },
       error: () => {
         this.submitting.set(false);

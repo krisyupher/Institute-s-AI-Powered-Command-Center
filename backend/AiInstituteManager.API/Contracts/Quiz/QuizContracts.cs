@@ -54,18 +54,17 @@ namespace AiInstituteManager.API.Contracts.Quiz
 
         [Required, MaxLength(200)]
         public string Title { get; init; } = string.Empty;
-
+        [Range(1, 1000, ErrorMessage = "MaxAttempts must be at least 1 when specified.")]
+        public int? MaxAttempts { get; init; }
         [Required]
         public int SubjectId { get; init; }
-
         public bool IsPublished { get; init; } = false;
-
         [Required, MinLength(1, ErrorMessage = "A quiz needs at least one question.")]
         public List<SaveQuestionRequest> Questions { get; init; } = new();
     }
 
     /// <summary>Returned by POST /api/quiz/save once the quiz is persisted.</summary>
-    public record QuizResponse(int Id, string Title, int SubjectId, bool IsPublished, int QuestionCount);
+    public record QuizResponse(int Id, string Title, int SubjectId, bool IsPublished, int QuestionCount, int? MaxAttempts);
 
     /// <summary>
     /// One question as the frontend reads it back from
@@ -84,5 +83,5 @@ namespace AiInstituteManager.API.Contracts.Quiz
     /// </summary>
     public record QuizDetailResponse(
         int Id, string Title, bool IsPublished, int SubjectId, int CreatedByTeacherId,
-        IReadOnlyList<QuestionResponse> Questions, DateTime CreatedAt, DateTime? UpdatedAt);
+        IReadOnlyList<QuestionResponse> Questions, DateTime CreatedAt, DateTime? UpdatedAt, int? MaxAttempts);
 }

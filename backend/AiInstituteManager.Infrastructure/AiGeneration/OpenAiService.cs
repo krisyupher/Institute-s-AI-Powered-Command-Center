@@ -61,8 +61,42 @@ namespace AiInstituteManager.Infrastructure.AiGeneration
                 ResponseFormat: new ResponseFormat("json_object"),
                 Temperature: 0.7);
 
-            string rawContent;
+            // LLMs are probabilistic — even with a prompt that explicitly
+            // says "Generate N questions" the model routinely under- or
+            // over-produces. Retry up to MaxAttempts times when the count
+            // is wrong; Temperature=0.7 means each retry has a real chance
+            // of returning the correct count.
+            const int MaxAttempts = 3;
+            int? lastReturnedCount = null;
 
+            for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+            {
+                var rawContent = await SendRequestAsync(requestBody, cancellationToken);
+                var parsed = ParseQuestions(rawContent);
+                lastReturnedCount = parsed.Count;
+
+                if (parsed.Count == questionCount)
+                {
+                    return parsed;
+                }
+
+                // Overflow is harmless — slice and return. Under-count is
+                // the real problem (we can't fabricate missing questions),
+                // so only under-counts trigger a retry.
+                if (parsed.Count > questionCount)
+                {
+                    return parsed.Take(questionCount).ToList();
+                }
+            }
+
+            throw new AiServiceException(
+                $"AI returned {lastReturnedCount} questions; expected {questionCount} after {MaxAttempts} attempts.");
+        }
+
+        private async Task<string> SendRequestAsync(
+            ChatCompletionRequest requestBody,
+            CancellationToken cancellationToken)
+        {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync(
@@ -78,7 +112,7 @@ namespace AiInstituteManager.Infrastructure.AiGeneration
                 var completion = await response.Content
                     .ReadFromJsonAsync<ChatCompletionResponse>(ResponseJsonOptions, cancellationToken);
 
-                rawContent = completion?.Choices?.FirstOrDefault()?.Message?.Content
+                return completion?.Choices?.FirstOrDefault()?.Message?.Content
                     ?? throw new AiServiceException("OpenAI response contained no message content.");
             }
             catch (HttpRequestException ex)
@@ -96,8 +130,6 @@ namespace AiInstituteManager.Infrastructure.AiGeneration
                 // different message.
                 throw new AiServiceException("The request to OpenAI timed out.", ex);
             }
-
-            return ParseQuestions(rawContent);
         }
 
         private static string BuildPrompt(string topic, string difficulty, int questionCount)

@@ -87,6 +87,21 @@ export interface SubmitQuizResponse {
   totalQuestions: number;
   correctCount: number;
   completedAt: string;
+  questionResults?: QuestionResult[];
+}
+
+/**
+ * One question's verdict in a submitted quiz, mirrored from the backend
+ * `QuestionResultResponse`. `text` is not part of the backend DTO — it is
+ * merged in client-side by `TakeQuizComponent` from the quiz already in
+ * memory so the results card can show what the question asked.
+ */
+export interface QuestionResult {
+  questionId: number;
+  text: string;
+  selectedAnswer: AnswerOption;
+  correctAnswer: AnswerOption;
+  isCorrect: boolean;
 }
 
 // A quiz as a student sees it: expanded navigation, no correct answers leaked.

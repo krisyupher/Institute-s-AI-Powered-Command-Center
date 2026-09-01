@@ -11,6 +11,12 @@ namespace AiInstituteManager.API.Controllers
     /// generator's subject dropdown and every subjectId -&gt; name lookup the
     /// frontend does. Not role-specific: any authenticated user may read it,
     /// same as the catalog itself carries no sensitive data.
+    ///
+    /// POST/PUT/DELETE are tightened to Teacher only via a method-level
+    /// [Authorize(Roles = "Teacher")] layered on top of the class-level
+    /// [Authorize] — this ADDS a restriction on top of a permissive base,
+    /// which fails safe (a mistake here means "too locked down," not "an
+    /// endpoint nobody meant to expose").
     /// </summary>
     [ApiController]
     [Route("api/subjects")]
@@ -36,45 +42,89 @@ namespace AiInstituteManager.API.Controllers
         }
 
         /// <summary>
-        /// POST /api/subjects — teachers create a new subject. If the code already
-        /// exists, returns 409 Conflict. On success, returns 201 Created with the
-        /// new subject's id and details.
+        /// POST /api/subjects — creates a new subject. Checks Code
+        /// uniqueness proactively (rather than only relying on the
+        /// database's unique index and catching the resulting exception)
+        /// so the error message is clear and immediate.
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Teacher,Admin")]
-        public async Task<ActionResult<SubjectResponse>> Create([FromBody] CreateSubjectRequest request)
+        [Authorize(Roles = "Teacher")]
+        public async Task<ActionResult<SubjectResponse>> Create(CreateSubjectRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Code))
+            var duplicate = (await _unitOfWork.Subjects.FindAsync(s => s.Code == request.Code)).Any();
+            if (duplicate)
             {
-                return BadRequest("Subject name and code are required.");
+                return Conflict(new { message = $"A subject with code '{request.Code}' already exists." });
             }
 
-            var existing = (await _unitOfWork.Subjects.GetAllAsync())
-                .FirstOrDefault(s => s.Code.ToUpper() == request.Code.ToUpper());
-            if (existing != null)
+            var subject = new Subject
             {
-                return Conflict($"Subject with code '{request.Code}' already exists.");
-            }
+                Name = request.Name,
+                Code = request.Code
+            };
 
-            var subject = new Subject { Name = request.Name, Code = request.Code };
             await _unitOfWork.Subjects.AddAsync(subject);
             await _unitOfWork.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetAll), new SubjectResponse(subject.Id, subject.Name, subject.Code, subject.CreatedAt, subject.UpdatedAt));
+            return Ok(new SubjectResponse(subject.Id, subject.Name, subject.Code, subject.CreatedAt, subject.UpdatedAt));
         }
 
         /// <summary>
-        /// DELETE /api/subjects/{id} — admin only. Deletes a subject and all quizzes
-        /// that reference it (cascade). Use with caution.
+        /// PUT /api/subjects/{id} — updates name/code. Excludes the
+        /// subject's own row from the duplicate-code check, since "update
+        /// a subject without changing its code" would otherwise
+        /// incorrectly flag itself as a conflict.
         /// </summary>
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<ActionResult<SubjectResponse>> Update(int id, UpdateSubjectRequest request)
+        {
+            var subject = await _unitOfWork.Subjects.GetByIdAsync(id);
+            if (subject is null)
+            {
+                return NotFound(new { message = $"Subject {id} was not found." });
+            }
+
+            var duplicate = (await _unitOfWork.Subjects.FindAsync(s => s.Code == request.Code && s.Id != id)).Any();
+            if (duplicate)
+            {
+                return Conflict(new { message = $"A subject with code '{request.Code}' already exists." });
+            }
+
+            subject.Name = request.Name;
+            subject.Code = request.Code;
+            subject.MarkAsUpdated();
+
+            _unitOfWork.Subjects.Update(subject);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Ok(new SubjectResponse(subject.Id, subject.Name, subject.Code, subject.CreatedAt, subject.UpdatedAt));
+        }
+
+        /// <summary>
+        /// DELETE /api/subjects/{id} — blocked if any quiz still
+        /// references this subject (QuizConfiguration has Quiz -&gt; Subject
+        /// as DeleteBehavior.Restrict, so the database itself would
+        /// reject this anyway — this check just turns that into a clear
+        /// 409 instead of a raw 500 from an unhandled DbUpdateException).
+        /// </summary>
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> Delete(int id)
         {
             var subject = await _unitOfWork.Subjects.GetByIdAsync(id);
-            if (subject == null)
+            if (subject is null)
             {
-                return NotFound($"Subject with id {id} not found.");
+                return NotFound(new { message = $"Subject {id} was not found." });
+            }
+
+            var hasQuizzes = (await _unitOfWork.Quizzes.FindAsync(q => q.SubjectId == id)).Any();
+            if (hasQuizzes)
+            {
+                return Conflict(new
+                {
+                    message = "Cannot delete a subject that has quizzes. Reassign or delete those quizzes first."
+                });
             }
 
             _unitOfWork.Subjects.Remove(subject);
