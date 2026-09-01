@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { of, switchMap } from 'rxjs';
 
 import { QuizService } from '../../../core/services/quiz.service';
 import { QuizDifficulty, Subject } from '../../../core/models/quiz.model';
@@ -45,13 +46,16 @@ export class QuizGeneratorComponent {
     return this.form.controls.topic;
   }
 
-  protected onSubjectChange(value: string): void {
-    if (value === 'another') {
+  protected onSubjectChange(value: number | null): void {
+    if (value === -1) {
       this.showCustomSubject.set(true);
-      this.form.controls.subjectId.reset();
     } else {
       this.showCustomSubject.set(false);
       this.customSubjectName.set('');
+      // Only mark as touched if selecting a real subject
+      if (value !== null) {
+        this.form.controls.subjectId.markAsTouched();
+      }
     }
   }
 
@@ -71,14 +75,17 @@ export class QuizGeneratorComponent {
   protected submit(): void {
     if (this.generating()) return;
 
-    if (this.showCustomSubject()) {
+    const { subjectId, difficulty, topic, questionCount } = this.form.getRawValue();
+    const isCustomSubject = subjectId === -1;
+
+    if (isCustomSubject) {
       if (!this.customSubjectName().trim()) {
         this.generateError.set('Please enter a subject name.');
         return;
       }
     }
 
-    if (this.form.invalid) {
+    if (!isCustomSubject && this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
@@ -86,24 +93,37 @@ export class QuizGeneratorComponent {
     this.generating.set(true);
     this.generateError.set(null);
 
-    const { subjectId, difficulty, topic, questionCount } = this.form.getRawValue();
-    const finalSubjectId = this.showCustomSubject()
-      ? -1
-      : subjectId!;
+    const customName = this.customSubjectName().trim();
 
-    this.quizApi
-      .generateQuiz({ subjectId: finalSubjectId, difficulty, topic, questionCount })
-      .subscribe({
-        // Draft ready: hand it straight to the preview-edit screen via router
-        // state (no static link/banner), where the teacher reviews and edits.
-        next: (draftQuiz) => {
-          this.generating.set(false);
-          this.router.navigate(['/teacher/preview'], { state: { draftQuiz } });
-        },
-        error: () => {
-          this.generating.set(false);
-          this.generateError.set('Could not generate a draft quiz. Please try again.');
-        },
-      });
+    // If custom subject: create it first, then generate quiz with the new subject's ID.
+    // Otherwise: generate quiz directly with the selected subject ID.
+    (isCustomSubject
+      ? this.quizApi.createSubject(customName, this.generateSubjectCode(customName))
+      : of({ id: subjectId! } as Subject)
+    ).pipe(
+      switchMap((subject) =>
+        this.quizApi.generateQuiz({ subjectId: subject.id, difficulty, topic, questionCount })
+      ),
+    ).subscribe({
+      next: (draftQuiz) => {
+        this.generating.set(false);
+        this.router.navigate(['/teacher/preview'], { state: { draftQuiz } });
+      },
+      error: () => {
+        this.generating.set(false);
+        this.generateError.set('Could not generate a draft quiz. Please try again.');
+      },
+    });
+  }
+
+  private generateSubjectCode(name: string): string {
+    const words = name.split(/\s+/).filter((w) => w.length > 0);
+    if (words.length > 0) {
+      return (words.length > 1
+        ? words.map((w) => w[0]).join('')
+        : words[0].substring(0, 3)
+      ).toUpperCase();
+    }
+    return 'CS';
   }
 }

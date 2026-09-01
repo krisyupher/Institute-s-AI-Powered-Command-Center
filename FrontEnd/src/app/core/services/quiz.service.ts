@@ -281,4 +281,17 @@ export class QuizService {
   getSubjectStats(): Observable<Subject[]> {
     return this.http.get<Subject[]>(`${environment.apiBaseUrl}/api/subjects`);
   }
+
+  // POST /api/subjects — teachers create a new subject that will appear in the
+  // dropdown for future quiz generation. Returns the created subject with its
+  // assigned id.
+  createSubject(name: string, code: string): Observable<Subject> {
+    return this.http.post<Subject>(`${environment.apiBaseUrl}/api/subjects`, { name, code });
+  }
+
+  // DELETE /api/subjects/{id} — admin only. Removes a subject and cascades to
+  // its quizzes.
+  deleteSubject(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiBaseUrl}/api/subjects/${id}`);
+  }
 }
