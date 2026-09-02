@@ -11,6 +11,16 @@
   themes: corporate, light;
 }
 
+// Root height boundary: pin html/body to the viewport and disable their scrollbar so
+// the main-layout shell (h-screen) becomes the only scroll container. The header and
+// sidebar inside that shell stay fixed; only the <main> content area scrolls.
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
 // DaisyUI themes already set the page background/base via `base-100`; keep only font
 // here so the whole app shares one stack.
 body {
