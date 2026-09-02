@@ -47,14 +47,14 @@
               <p class="mt-1 text-sm" [class.text-base-content/70]="qr.isCorrect">
                 Your answer:
                 @if (qr.isCorrect) {
-                  <span class="font-semibold text-success">{{ qr.selectedAnswer }}</span>
+                  <span class="font-semibold text-success">{{ qr.selectedAnswer }}. {{ optionText(qr, qr.selectedAnswer) }}</span>
                 } @else {
-                  <span class="font-semibold text-error">{{ qr.selectedAnswer }}</span>
+                  <span class="font-semibold text-error">{{ qr.selectedAnswer }}. {{ optionText(qr, qr.selectedAnswer) }}</span>
                 }
               </p>
               @if (!qr.isCorrect) {
                 <p class="text-sm text-base-content/70">
-                  Correct answer: <span class="font-semibold">{{ qr.correctAnswer }}</span>
+                  Correct answer: <span class="font-semibold">{{ qr.correctAnswer }}. {{ optionText(qr, qr.correctAnswer) }}</span>
                 </p>
               }
             </li>

@@ -144,7 +144,14 @@ export class TakeQuizComponent implements OnInit {
         // (refresh, etc).
         const questionResults = (result.questionResults ?? []).map((r) => {
           const q = quiz.questions.find((x) => x.id === r.questionId);
-          return { ...r, text: q?.text ?? `Question #${r.questionId}` };
+          return {
+            ...r,
+            text: q?.text ?? `Question #${r.questionId}`,
+            optionA: q?.optionA,
+            optionB: q?.optionB,
+            optionC: q?.optionC,
+            optionD: q?.optionD,
+          };
         });
         this.router.navigate(['/student/results'], {
           state: { result: { ...result, questionResults } },
