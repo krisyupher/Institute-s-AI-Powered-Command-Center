@@ -225,6 +225,20 @@ namespace AiInstituteManager.API.Controllers
         {
             foreach (var q in questions)
             {
+                // Guard: reject AI responses that contain an empty correctAnswer.
+                // [Required] on the DTO only blocks null, not "", so an empty
+                // string from the AI would otherwise reach the database and
+                // later break grading. Surface a clear error instead so the
+                // teacher knows to re-generate or edit the question.
+                if (string.IsNullOrWhiteSpace(q.CorrectAnswer))
+                {
+                    var preview = q.Text.Length > 50 ? q.Text[..50] + "..." : q.Text;
+                    throw new InvalidOperationException(
+                        $"Question \"{preview}\" has an empty correctAnswer from the AI. " +
+                        "Please re-generate the quiz or edit the question to select a " +
+                        "correct answer (A, B, C, or D).");
+                }
+
                 await _unitOfWork.Questions.AddAsync(new Question
                 {
                     QuizId = quizId,
