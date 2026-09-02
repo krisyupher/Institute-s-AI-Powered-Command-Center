@@ -125,6 +125,7 @@ describe('TakeQuizComponent', () => {
       totalQuestions: 2,
       correctCount: 2,
       completedAt: '2026-03-06T10:00:00Z',
+      questionResults: [],
     };
     const submitQuiz = vi.fn(() => of(result));
     const fixture = setup({ getQuizById: () => of(QUIZ), submitQuiz });

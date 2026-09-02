@@ -29,12 +29,12 @@ function linkLabels(fixture: ReturnType<typeof setup>): string[] {
 describe('SidebarComponent', () => {
   it('shows the teacher nav items for a Teacher session', () => {
     const fixture = setup('Teacher');
-    expect(linkLabels(fixture)).toEqual(['Create AI Quiz', 'My Quizzes']);
+    expect(linkLabels(fixture)).toEqual(['Dashboard', 'Create AI Quiz', 'My Quizzes']);
   });
 
   it('shows the student nav items for a Student session', () => {
     const fixture = setup('Student');
-    expect(linkLabels(fixture)).toEqual(['Available Quizzes', 'My Results']);
+    expect(linkLabels(fixture)).toEqual(['Dashboard', 'Available Quizzes', 'My Results']);
   });
 
   it('shows the admin nav items for an Admin session', () => {

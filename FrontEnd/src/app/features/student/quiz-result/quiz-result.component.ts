@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { QuizResult, SubmitQuizResponse } from '../../../core/models/quiz.model';
+import { AnswerOption, QuestionResult, QuizResult, SubmitQuizResponse } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
 
 /**
@@ -41,6 +41,20 @@ export class QuizResultComponent implements OnInit {
   /** True when a historical result's score meets the passing threshold. */
   protected isPassed(result: QuizResult): boolean {
     return result.score >= QuizResultComponent.PASSING_PERCENT;
+  }
+
+  /** Render the actual option text for a question verdict letter, falling back to the letter itself. */
+  protected optionText(qr: QuestionResult, letter: AnswerOption): string {
+    switch (letter) {
+      case 'A':
+        return qr.optionA || 'A';
+      case 'B':
+        return qr.optionB || 'B';
+      case 'C':
+        return qr.optionC || 'C';
+      case 'D':
+        return qr.optionD || 'D';
+    }
   }
 
   ngOnInit(): void {

@@ -94,7 +94,10 @@ export interface SubmitQuizResponse {
  * One question's verdict in a submitted quiz, mirrored from the backend
  * `QuestionResultResponse`. `text` is not part of the backend DTO — it is
  * merged in client-side by `TakeQuizComponent` from the quiz already in
- * memory so the results card can show what the question asked.
+ * memory so the results card can show what the question asked. The four
+ * option texts are merged in the same way so the review card can show the
+ * actual answer a student picked and the actual correct answer, not just
+ * their letters.
  */
 export interface QuestionResult {
   questionId: number;
@@ -102,6 +105,10 @@ export interface QuestionResult {
   selectedAnswer: AnswerOption;
   correctAnswer: AnswerOption;
   isCorrect: boolean;
+  optionA?: string;
+  optionB?: string;
+  optionC?: string;
+  optionD?: string;
 }
 
 // A quiz as a student sees it: expanded navigation, no correct answers leaked.
