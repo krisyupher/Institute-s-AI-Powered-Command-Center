@@ -1,2 +1,6 @@
-// Layout handled entirely by the DaisyUI `navbar` component and Tailwind utilities
-// in `app.html` — no custom styles needed here.
+// `<app-root>` is a custom element that defaults to `display: block` with `height: auto`,
+// which breaks the height inheritance chain from html/body down to the layout shell.
+// `display: contents` makes the host layout-neutral so the viewport height flows through.
+:host {
+  display: contents;
+}

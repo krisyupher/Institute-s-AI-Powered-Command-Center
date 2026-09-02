@@ -141,6 +141,6 @@ describe('QuizPreviewComponent', () => {
     // scrolling — see quiz-preview.component.html's `section.space-y-4`.
     const fixture = setup({ getDraftQuiz: () => of(DRAFT) });
     const section = fixture.nativeElement.querySelector('section.space-y-4');
-    expect(section?.className).toContain('pb-24');
+    expect(section?.className).toContain('pb-28');
   });
 });

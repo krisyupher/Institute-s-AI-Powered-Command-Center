@@ -81,9 +81,9 @@
     </div>
   </section>
 
-  <!-- Editable question cards. pb-24 reserves room for the sticky action bar below so it
-       never overlaps the last-scrolled card's content. -->
-  <section class="space-y-4 pb-24">
+  <!-- Editable question cards. pb-28 (≈7rem ≈ 112px) reserves room for the fixed
+       footer below so the last card's content scrolls fully into view, not under the bar. -->
+  <section class="space-y-4 pb-28">
     @for (question of quiz.questions; track $index; let i = $index) {
       <div
         class="card bg-base-100 border border-base-200 shadow-sm mb-4"
@@ -159,8 +159,11 @@
     }
   </section>
 
-  <!-- Footer actions: discard the draft or publish the final quiz -->
-  <div class="sticky bottom-0 z-10 mt-6 flex items-center justify-end gap-2 border-t border-base-200 bg-base-100/95 p-4 backdrop-blur">
+  <!-- Footer actions: pinned to the bottom of the viewport so Discard/Publish are
+       always visible. On desktop, offset left by the sidebar width (w-64 = 16rem) to
+       avoid overlapping the sidebar; z-20 matches the sidebar's z-index so the footer
+       stays above the sidebar on desktop and above the drawer overlay on mobile. -->
+  <div class="fixed bottom-0 left-0 right-0 z-20 mt-6 flex items-center justify-end gap-2 border-t border-base-200 bg-base-100/95 p-4 backdrop-blur md:left-[16rem]">
     <button class="btn btn-ghost" (click)="cancel()">Discard</button>
     <button
       class="btn btn-primary"
