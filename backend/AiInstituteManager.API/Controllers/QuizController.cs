@@ -38,13 +38,31 @@ namespace AiInstituteManager.API.Controllers
         [HttpPost("generate")]
         public async Task<ActionResult<IReadOnlyList<GeneratedQuestionResponse>>> Generate(GenerateQuizRequest request)
         {
-            var generated = await _openAiService.GenerateQuizQuestionsAsync(
-                request.Topic, request.Difficulty, request.QuestionCount);
 
-            var response = generated.Select(q => new GeneratedQuestionResponse(
-                q.Text, q.OptionA, q.OptionB, q.OptionC, q.OptionD, q.CorrectAnswer));
 
-            return Ok(response);
+            try
+            {
+                var generated = await _openAiService.GenerateQuizQuestionsAsync(
+                    request.Topic, request.Difficulty, request.QuestionCount);
+
+                var response = generated.Select(q => new GeneratedQuestionResponse(
+                    q.Text, q.OptionA, q.OptionB, q.OptionC, q.OptionD, q.CorrectAnswer));
+
+                return Ok(response);
+            }
+            catch (AiServiceException ex) when (ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("rate_limit", StringComparison.OrdinalIgnoreCase))
+            {
+                // Rate limit exceeded — don't expose Groq's raw error body; show a
+                // user-friendly message that explains the situation and instructs
+                // the teacher to try again later or contact support.
+                return BadRequest(new { code = "rate_limit", message = "Quiz generation limit is reached. Please try again later or contact the administrator for details." });
+            }
+            catch (AiServiceException)
+            {
+                // Transient AI error (including json_validate_failed after the
+                // ResponseFormat null fix) — generic friendly message.
+                return BadRequest(new { code = "ai_error", message = "Could not generate a draft quiz. Please try again." });
+            }
         }
 
         [HttpPost("save")]

@@ -109,9 +109,14 @@ export class QuizGeneratorComponent {
         this.generating.set(false);
         this.router.navigate(['/teacher/preview'], { state: { draftQuiz } });
       },
-      error: () => {
+      error: (err: any) => {
         this.generating.set(false);
-        this.generateError.set('Could not generate a draft quiz. Please try again.');
+        const code = err?.error?.code;
+        if (code === 'rate_limit') {
+          this.generateError.set('Quiz generation limit is reached. Please try again later or contact the administrator for details.');
+        } else {
+          this.generateError.set('Could not generate a draft quiz. Please try again.');
+        }
       },
     });
   }

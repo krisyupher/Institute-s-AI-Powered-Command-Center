@@ -19,7 +19,13 @@ namespace AiInstituteManager.Infrastructure.AiGeneration
     internal record ChatCompletionRequest(
         string Model,
         List<ChatMessage> Messages,
-        [property: JsonPropertyName("response_format")] ResponseFormat ResponseFormat,
+        // JSON object mode is supported on every Groq model, so we always
+        // send it (the nullable + JsonIgnore-when-null only guards against
+        // a provider that rejects the field outright). Prompt-side JSON
+        // instructions plus ParseQuestions' markdown-fence stripping remain
+        // as a belt-and-suspenders fallback.
+        [property: JsonPropertyName("response_format")]
+        ResponseFormat ResponseFormat,
         double Temperature);
 
     internal record ResponseFormat(string Type);

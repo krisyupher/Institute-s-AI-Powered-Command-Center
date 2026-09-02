@@ -12,5 +12,14 @@
         public string ApiKey { get; set; } = string.Empty;
         public string BaseUrl { get; set; } = "https://api.openai.com/v1/";
         public string Model { get; set; } = "gpt-4o-mini";
+
+        // Generation tuning. These were hard-coded constants on
+        // OpenAiService (chunkSize=5, maxAttempts=3) and moved here so
+        // operators can dial them per environment without a rebuild —
+        // e.g. lower ChunkSize on the free tier, raise MaxAttempts
+        // against a flaky provider. They fall back to the historical
+        // values when omitted from appsettings.json.
+        public int ChunkSize { get; set; } = 5;
+        public int MaxAttempts { get; set; } = 3;
     }
 }
