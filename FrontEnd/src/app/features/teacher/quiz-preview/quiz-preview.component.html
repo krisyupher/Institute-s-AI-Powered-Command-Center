@@ -163,7 +163,7 @@
        always visible. On desktop, offset left by the sidebar width (w-64 = 16rem) to
        avoid overlapping the sidebar; z-20 matches the sidebar's z-index so the footer
        stays above the sidebar on desktop and above the drawer overlay on mobile. -->
-  <div class="fixed bottom-0 left-0 right-0 z-20 mt-6 flex items-center justify-end gap-2 border-t border-base-200 bg-base-100/95 p-4 backdrop-blur md:left-[16rem]">
+  <div class="fixed bottom-0 left-0 right-0 z-20 mt-6 flex items-center justify-end gap-2 border-t border-base-200 bg-base-100/95 p-4 backdrop-blur lg:left-64">
     <button class="btn btn-ghost" (click)="cancel()">Discard</button>
     <button
       class="btn btn-primary"

@@ -42,6 +42,13 @@ describe('SidebarComponent', () => {
     expect(linkLabels(fixture)).toEqual(['Dashboard']);
   });
 
+  it('makes the menu, rather than the drawer panel, the sidebar scroll region', () => {
+    const fixture = setup('Teacher');
+    const menu = fixture.nativeElement.querySelector('ul.menu');
+    expect(menu.className).toContain('overflow-y-auto');
+    expect(menu.className).toContain('min-h-0');
+  });
+
   describe('mobile drawer auto-close', () => {
     afterEach(() => {
       document.getElementById('app-drawer')?.remove();

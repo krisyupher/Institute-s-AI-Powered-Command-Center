@@ -1,16 +1,16 @@
-<div class="h-screen flex flex-col bg-base-200 overflow-hidden" data-theme="corporate">
+<div class="flex h-screen min-h-0 flex-col overflow-hidden bg-base-200" data-theme="corporate">
   <app-header></app-header>
 
-  <div class="drawer lg:drawer-open flex-1 overflow-hidden">
+  <div class="drawer flex-1 min-h-0 overflow-hidden lg:drawer-open">
     <input id="app-drawer" type="checkbox" class="drawer-toggle" />
 
-    <main class="drawer-content h-full overflow-y-auto p-6">
+    <main class="drawer-content min-h-0 overflow-y-auto p-6 pb-10">
       <router-outlet></router-outlet>
     </main>
 
     <div class="drawer-side z-20">
       <label for="app-drawer" aria-label="Close menu" class="drawer-overlay"></label>
-      <app-sidebar class="w-64 min-h-full bg-base-100 border-r border-base-200"></app-sidebar>
+      <app-sidebar class="block h-full min-h-0 w-64 border-r border-base-200 bg-base-100"></app-sidebar>
     </div>
   </div>
 </div>
