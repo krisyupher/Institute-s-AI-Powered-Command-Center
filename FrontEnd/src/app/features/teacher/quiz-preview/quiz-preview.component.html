@@ -5,7 +5,7 @@
       Review the AI draft below. Edit any question or option, then publish when satisfied.
     </p>
   </div>
-  <a class="btn btn-ghost btn-sm" routerLink="/teacher/generator">
+  <a class="btn btn-ghost btn-sm" href="/teacher/generator" (click)="leaveEditor($event)">
     ← Back to Generator
   </a>
 </header>
@@ -63,6 +63,9 @@
         <span class="badge badge-ghost badge-lg">Subject: {{ quiz.subjectName }}</span>
         <span class="badge badge-primary badge-lg">Difficulty: {{ quiz.difficulty }}</span>
         <span class="badge badge-outline badge-lg">{{ quiz.questions.length }} questions</span>
+        @if (hasUnsavedChanges()) {
+          <span class="badge badge-warning badge-lg" role="status">Unsaved changes</span>
+        }
         @if (published()) {
           <span class="badge badge-success badge-lg">Published</span>
         } @else {
@@ -112,9 +115,8 @@
               >
                 ⠿
               </button>
-              <p class="text-sm font-medium uppercase tracking-wide text-base-content/70">
-                Question {{ i + 1 }}
-              </p>
+              <span class="badge badge-primary badge-lg min-w-12 font-semibold">Q{{ i + 1 }}</span>
+              <p class="text-sm font-medium uppercase tracking-wide text-base-content/70">Question {{ i + 1 }}</p>
             </div>
             <button
               class="btn btn-ghost btn-error btn-sm"
@@ -135,22 +137,36 @@
 
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             @for (letter of optionLetters; track $index) {
-              <label class="flex items-start gap-2">
+              <label
+                class="flex items-start gap-2 rounded-lg border border-base-200 p-2 transition-colors"
+                [class.correct-option]="question.correctAnswer === letter"
+              >
                 <input
                   type="radio"
-                  class="radio radio-primary radio-sm mt-2"
+                  class="radio radio-success radio-sm mt-2"
                   [name]="'correct-' + i"
                   [value]="letter"
                   [checked]="question.correctAnswer === letter"
+                  [attr.aria-label]="'Mark option ' + letter + ' as correct'"
                   (change)="updateQuestion(i, { correctAnswer: letter })"
                 />
-                <input
-                  type="text"
-                  class="input input-bordered w-full"
-                  [value]="optionText(question, letter)"
-                  [placeholder]="'Option ' + letter + ' text'"
-                  (input)="onOptionInput(i, letter, $any($event.target).value)"
-                />
+                <div class="min-w-0 flex-1">
+                  <div class="mb-1 flex min-h-5 items-center justify-between gap-2">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
+                      Option {{ letter }}
+                    </span>
+                    @if (question.correctAnswer === letter) {
+                      <span class="badge badge-success badge-sm">Correct answer</span>
+                    }
+                  </div>
+                  <input
+                    type="text"
+                    class="input input-bordered w-full"
+                    [value]="optionText(question, letter)"
+                    [placeholder]="'Option ' + letter + ' text'"
+                    (input)="onOptionInput(i, letter, $any($event.target).value)"
+                  />
+                </div>
               </label>
             }
           </div>
@@ -171,6 +187,14 @@
        avoid overlapping the sidebar; z-20 matches the sidebar's z-index so the footer
        stays above the sidebar on desktop and above the drawer overlay on mobile. -->
   <div class="fixed bottom-0 left-0 right-0 z-20 mt-6 flex items-center justify-end gap-2 border-t border-base-200 bg-base-100/95 p-4 backdrop-blur lg:left-64">
+    <div class="mr-auto flex items-center gap-2 text-sm">
+      @if (hasUnsavedChanges()) {
+        <span class="inline-flex items-center gap-2 text-warning" role="status">
+          <span class="h-2 w-2 rounded-full bg-warning" aria-hidden="true"></span>
+          Unsaved changes
+        </span>
+      }
+    </div>
     <button class="btn btn-ghost" (click)="cancel()">Discard</button>
     <button
       class="btn btn-primary"

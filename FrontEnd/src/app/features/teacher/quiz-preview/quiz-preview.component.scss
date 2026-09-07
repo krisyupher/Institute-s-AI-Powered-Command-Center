@@ -2,3 +2,9 @@
   display: block;
   padding-bottom: 2rem;
 }
+
+.correct-option {
+  border-color: var(--color-success);
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+  box-shadow: 0 0.25rem 0.75rem -0.5rem var(--color-success);
+}
