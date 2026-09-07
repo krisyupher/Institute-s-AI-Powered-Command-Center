@@ -27,6 +27,31 @@ body {
   font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
 }
 
+// Keep keyboard focus visible across DaisyUI and native controls. Component-specific
+// focus styles can still refine the ring, but no interactive element should lose it.
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:not([tabindex='-1']):focus-visible {
+  outline: 0.1875rem solid color-mix(in oklab, var(--color-primary) 75%, currentColor);
+  outline-offset: 0.1875rem;
+}
+
+@media (forced-colors: active) {
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible,
+  [tabindex]:not([tabindex='-1']):focus-visible {
+    outline: 2px solid Highlight;
+  }
+}
+
 // Shared data-table treatment: keep dense data readable, horizontally scrollable,
 // and visually consistent across the feature dashboards.
 .app-table-scroll {

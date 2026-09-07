@@ -96,7 +96,23 @@
     }
 
     <!-- Question navigator -->
-    <div class="flex flex-wrap gap-2 mt-6">
+    <nav class="mt-6" aria-label="Question navigator">
+      <div class="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-base-content/70">
+        <span class="font-semibold text-base-content">Question status:</span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-primary" aria-hidden="true"></span>
+          Current
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-success" aria-hidden="true"></span>
+          Answered
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full border border-base-content/40" aria-hidden="true"></span>
+          Unanswered
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-2">
       @for (item of q.questions; track item.id; let i = $index) {
         <button
           type="button"
@@ -106,12 +122,14 @@
           [class.btn-success]="i !== currentIndex() && answers()[item.id]"
           [attr.aria-current]="i === currentIndex() ? 'step' : null"
           [attr.aria-label]="'Go to question ' + (i + 1) + (answers()[item.id] ? ' (answered)' : ' (unanswered)')"
+          [attr.title]="'Question ' + (i + 1) + (i === currentIndex() ? ' (current)' : answers()[item.id] ? ' (answered)' : ' (unanswered)')"
           (click)="jumpTo(i)"
         >
           {{ i + 1 }}
         </button>
       }
-    </div>
+      </div>
+    </nav>
   }
 }
 
