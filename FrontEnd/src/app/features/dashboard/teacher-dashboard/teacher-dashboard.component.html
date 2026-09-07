@@ -62,7 +62,7 @@
   <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
     <div class="card-body">
       <p class="card-title">My Quizzes</p>
-      <div class="overflow-x-auto">
+      <div class="app-table-scroll">
         @if (myQuizzes().length === 0) {
           <app-state-panel
             title="No quizzes yet"
@@ -71,26 +71,27 @@
             <a class="btn btn-primary btn-sm" routerLink="/teacher/generator">Generate a quiz</a>
           </app-state-panel>
         } @else {
-        <table class="table table-sm">
+        <table class="table app-data-table w-full">
+          <caption class="sr-only">Quizzes created by you</caption>
           <thead>
           <tr>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Students</th>
-            <th>Created</th>
+            <th scope="col">Title</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="app-table-number">Students</th>
+            <th scope="col">Created</th>
           </tr>
           </thead>
           <tbody>
             @for (quiz of myQuizzes(); track quiz.id) {
               <tr>
-                <td><a [routerLink]="['/teacher/preview', quiz.id]" class="link link-primary">{{ quiz.title }}</a></td>
+                <td><a [routerLink]="['/teacher/preview', quiz.id]" class="link link-primary font-medium">{{ quiz.title }}</a></td>
                 <td>
                       <span class="badge" [ngClass]="quiz.isPublished ? 'badge-success' : 'badge-warning'">
                         {{ quiz.isPublished ? 'Published' : 'Draft' }}
                       </span>
                 </td>
-                <td>{{ quiz.results?.length || 0 }}</td>
-                <td>{{ quiz.createdAt | date: 'd MMM' }}</td>
+                <td class="app-table-number">{{ quiz.results?.length || 0 }}</td>
+                <td class="app-table-date">{{ quiz.createdAt | date: 'd MMM' }}</td>
               </tr>
             }
           </tbody>

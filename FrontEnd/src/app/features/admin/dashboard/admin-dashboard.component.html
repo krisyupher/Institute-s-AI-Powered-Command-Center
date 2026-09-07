@@ -71,19 +71,20 @@
           message="Quizzes will appear here after teachers create them."
         />
       } @else {
-        <div class="overflow-x-auto">
-          <table class="table table-zebra w-full">
+        <div class="app-table-scroll">
+          <table class="table app-data-table app-table-wide w-full">
+            <caption class="sr-only">All quizzes and their statistics</caption>
             <thead>
               <tr>
-                <th>Title</th>
-                <th>Subject</th>
-                <th>Created By</th>
-                <th>Questions</th>
-                <th>Attempts</th>
-                <th>Avg Score</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th class="text-right">Actions</th>
+                <th scope="col">Title</th>
+                <th scope="col">Subject</th>
+                <th scope="col">Created By</th>
+                <th scope="col" class="app-table-number">Questions</th>
+                <th scope="col" class="app-table-number">Attempts</th>
+                <th scope="col" class="app-table-number">Avg Score</th>
+                <th scope="col">Status</th>
+                <th scope="col">Created</th>
+                <th scope="col" class="app-table-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -92,9 +93,9 @@
                   <td class="font-medium">{{ quiz.title }}</td>
                   <td>{{ quiz.subjectName }}</td>
                   <td>{{ quiz.createdByTeacherName }}</td>
-                  <td>{{ quiz.questionCount }}</td>
-                  <td>{{ quiz.attempts }}</td>
-                  <td>
+                  <td class="app-table-number">{{ quiz.questionCount }}</td>
+                  <td class="app-table-number">{{ quiz.attempts }}</td>
+                  <td class="app-table-number">
                     <span
                       class="badge"
                       [class.badge-success]="quiz.averageScore >= 70"
@@ -111,25 +112,27 @@
                       <span class="badge badge-ghost">Draft</span>
                     }
                   </td>
-                  <td>{{ quiz.createdAt | date: 'd MMM yyyy' }}</td>
-                  <td class="text-right">
-                    <a [routerLink]="['/admin/preview', quiz.id]" class="btn btn-sm btn-ghost" title="View quiz">
-                      View
-                    </a>
-                    <a
-                      [routerLink]="['/admin/preview', quiz.id]"
-                      class="btn btn-sm btn-outline btn-primary ml-2"
-                      title="Edit quiz"
-                    >
-                      Edit
-                    </a>
-                    <button
-                      (click)="askDelete(quiz)"
-                      class="btn btn-sm btn-ghost text-error ml-2"
-                      title="Delete quiz"
-                    >
-                      Delete
-                    </button>
+                  <td class="app-table-date">{{ quiz.createdAt | date: 'd MMM yyyy' }}</td>
+                  <td class="app-table-actions">
+                    <div class="flex justify-end gap-2">
+                      <a [routerLink]="['/admin/preview', quiz.id]" class="btn btn-sm btn-ghost" title="View quiz">
+                        View
+                      </a>
+                      <a
+                        [routerLink]="['/admin/preview', quiz.id]"
+                        class="btn btn-sm btn-outline btn-primary"
+                        title="Edit quiz"
+                      >
+                        Edit
+                      </a>
+                      <button
+                        (click)="askDelete(quiz)"
+                        class="btn btn-sm btn-ghost text-error"
+                        title="Delete quiz"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               }

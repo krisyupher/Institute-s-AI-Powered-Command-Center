@@ -26,3 +26,81 @@ body {
 body {
   font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
 }
+
+// Shared data-table treatment: keep dense data readable, horizontally scrollable,
+// and visually consistent across the feature dashboards.
+.app-table-scroll {
+  overflow-x: auto;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+  border-radius: 0.875rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-data-table {
+  min-width: 42rem;
+}
+
+.app-data-table.app-table-medium {
+  min-width: 44rem;
+}
+
+.app-data-table.app-table-extended {
+  min-width: 56rem;
+}
+
+.app-data-table.app-table-wide {
+  min-width: 72rem;
+}
+
+.app-data-table thead {
+  background-color: color-mix(in oklab, var(--color-base-200) 65%, var(--color-base-100));
+}
+
+.app-data-table th {
+  padding-block: 0.75rem;
+  padding-inline: 1rem;
+  color: color-mix(in oklab, var(--color-base-content) 68%, transparent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.app-data-table td {
+  padding-block: 0.875rem;
+  padding-inline: 1rem;
+  vertical-align: middle;
+}
+
+.app-data-table tbody tr {
+  border-top: 1px solid color-mix(in oklab, var(--color-base-content) 9%, transparent);
+  transition: background-color 150ms ease;
+}
+
+.app-data-table tbody tr:hover,
+.app-data-table tbody tr:focus-within {
+  background-color: color-mix(in oklab, var(--color-primary) 6%, transparent);
+}
+
+.app-data-table .app-table-number {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.app-data-table .app-table-date,
+.app-data-table .app-table-actions {
+  white-space: nowrap;
+}
+
+.app-data-table .app-table-actions {
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-data-table tbody tr {
+    transition: none;
+  }
+}

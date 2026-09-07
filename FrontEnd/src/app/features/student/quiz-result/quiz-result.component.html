@@ -79,23 +79,24 @@
   />
 } @else if (pastResults().length > 0) {
   <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl">
-    <div class="card-body">
-      <h2 class="card-title text-base">Past results</h2>
-      <div class="overflow-x-auto">
-        <table class="table">
+      <div class="card-body">
+        <h2 class="card-title text-base">Past results</h2>
+      <div class="app-table-scroll">
+        <table class="table app-data-table w-full">
+          <caption class="sr-only">Quiz result history</caption>
           <thead>
             <tr>
-              <th>Quiz</th>
-              <th>Score</th>
-              <th>Result</th>
-              <th>Completed</th>
+              <th scope="col">Quiz</th>
+              <th scope="col" class="app-table-number">Score</th>
+              <th scope="col">Result</th>
+              <th scope="col">Completed</th>
             </tr>
           </thead>
           <tbody>
             @for (result of pastResults(); track result.id) {
               <tr>
                 <td>Quiz #{{ result.quizId }}</td>
-                <td>{{ result.score }}%</td>
+                <td class="app-table-number">{{ result.score }}%</td>
                 <td>
                   <span
                     class="badge badge-sm"
@@ -105,7 +106,7 @@
                     {{ isPassed(result) ? 'Pass' : 'Fail' }}
                   </span>
                 </td>
-                <td>{{ result.completedAt | date: 'mediumDate' }}</td>
+                <td class="app-table-date">{{ result.completedAt | date: 'mediumDate' }}</td>
               </tr>
             }
           </tbody>

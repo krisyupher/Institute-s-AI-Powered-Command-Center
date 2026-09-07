@@ -34,14 +34,15 @@
 } @else {
   <div class="card bg-base-100 border border-base-200 shadow-sm">
     <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
+      <table class="table app-data-table app-table-extended w-full">
+        <caption class="sr-only">Your quizzes</caption>
         <thead>
           <tr>
-            <th>Title</th>
-            <th>Subject</th>
-            <th>Questions</th>
-            <th>Status</th>
-            <th class="text-right">Actions</th>
+            <th scope="col">Title</th>
+            <th scope="col">Subject</th>
+            <th scope="col" class="app-table-number">Questions</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="app-table-actions">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -49,7 +50,7 @@
             <tr>
               <td class="font-medium">{{ quiz.title }}</td>
               <td>{{ subjectName(quiz.subjectId) }}</td>
-              <td>{{ quiz.questions.length }}</td>
+              <td class="app-table-number">{{ quiz.questions.length }}</td>
               <td>
                 @if (quiz.isPublished) {
                   <span class="badge badge-success">Published</span>
@@ -57,28 +58,30 @@
                   <span class="badge badge-ghost">Draft</span>
                 }
               </td>
-              <td class="text-right">
-                <a
-                  [routerLink]="['/teacher/preview', quiz.id]"
-                  class="btn btn-sm btn-ghost"
-                  title="View quiz"
-                >
-                  View
-                </a>
-                <a
-                  [routerLink]="['/teacher/preview', quiz.id]"
-                  class="btn btn-sm btn-outline btn-primary ml-2"
-                  title="Edit quiz"
-                >
-                  Edit
-                </a>
-                <button
-                  (click)="askDelete(quiz)"
-                  class="btn btn-sm btn-ghost text-error ml-2"
-                  title="Delete quiz"
-                >
-                  Delete
-                </button>
+              <td class="app-table-actions">
+                <div class="flex justify-end gap-2">
+                  <a
+                    [routerLink]="['/teacher/preview', quiz.id]"
+                    class="btn btn-sm btn-ghost"
+                    title="View quiz"
+                  >
+                    View
+                  </a>
+                  <a
+                    [routerLink]="['/teacher/preview', quiz.id]"
+                    class="btn btn-sm btn-outline btn-primary"
+                    title="Edit quiz"
+                  >
+                    Edit
+                  </a>
+                  <button
+                    (click)="askDelete(quiz)"
+                    class="btn btn-sm btn-ghost text-error"
+                    title="Delete quiz"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           }

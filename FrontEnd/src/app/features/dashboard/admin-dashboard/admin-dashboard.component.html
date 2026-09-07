@@ -91,31 +91,32 @@
   <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
     <div class="card-body">
       <p class="card-title">Quiz Performance Summary</p>
-      <div class="overflow-x-auto">
+      <div class="app-table-scroll">
         @if (quizSubjectStats().length === 0) {
           <app-state-panel
             title="No quiz performance yet"
             message="Performance details will appear after quizzes are created."
           />
         } @else {
-        <table class="table table-sm">
+        <table class="table app-data-table app-table-medium w-full">
+          <caption class="sr-only">Quiz performance by subject</caption>
           <thead>
           <tr>
-            <th>Subject</th>
-            <th>Quizzes Created</th>
-            <th>Quizzes Published</th>
-            <th>Avg Score</th>
-            <th>Completion Rate</th>
+            <th scope="col">Subject</th>
+            <th scope="col" class="app-table-number">Quizzes Created</th>
+            <th scope="col" class="app-table-number">Quizzes Published</th>
+            <th scope="col" class="app-table-number">Avg Score</th>
+            <th scope="col" class="app-table-number">Completion Rate</th>
           </tr>
           </thead>
           <tbody>
             @for (subject of quizSubjectStats(); track subject.id) {
               <tr>
                 <td>{{ subject.name }}</td>
-                <td>{{ subject.quizzesCreated }}</td>
-                <td>{{ subject.quizzesPublished }}</td>
-                <td>{{ subject.avgScore }}%</td>
-                <td>{{ subject.completionRate }}%</td>
+                <td class="app-table-number">{{ subject.quizzesCreated }}</td>
+                <td class="app-table-number">{{ subject.quizzesPublished }}</td>
+                <td class="app-table-number">{{ subject.avgScore }}%</td>
+                <td class="app-table-number">{{ subject.completionRate }}%</td>
               </tr>
             }
           </tbody>
