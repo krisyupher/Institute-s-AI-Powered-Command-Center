@@ -9,13 +9,14 @@ import {
   SaveQuizRequest,
 } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 /** Base of the quiz-list route for the current area (admin reuses this editor). */
 const QUIZ_LIST_PATH = { admin: '/admin/dashboard', teacher: '/teacher/quizzes' } as const;
 
 @Component({
   selector: 'app-quiz-preview',
-  imports: [RouterLink],
+  imports: [RouterLink, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'quiz-preview.component.html',
   styleUrl: 'quiz-preview.component.scss',

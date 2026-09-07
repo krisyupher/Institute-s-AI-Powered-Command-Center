@@ -66,10 +66,17 @@
 }
 
 @if (loading()) {
-  <div class="flex items-center gap-3 py-8 text-base-content/60">
-    <span class="loading loading-spinner loading-sm"></span>
-    <span>Loading your results…</span>
-  </div>
+  <app-state-panel
+    variant="loading"
+    title="Loading your results"
+    message="Please wait while your quiz history loads."
+  />
+} @else if (loadError()) {
+  <app-state-panel
+    variant="error"
+    title="Unable to load results"
+    [message]="loadError()!"
+  />
 } @else if (pastResults().length > 0) {
   <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl">
     <div class="card-body">
@@ -107,7 +114,10 @@
     </div>
   </section>
 } @else if (!justSubmitted()) {
-  <div class="alert">
-    <span>No quiz results yet. Take a quiz to see your score here.</span>
-  </div>
+  <app-state-panel
+    title="No quiz results yet"
+    message="Take a quiz to start tracking your progress."
+  >
+    <a class="btn btn-primary btn-sm" routerLink="/student/quizzes">Browse quizzes</a>
+  </app-state-panel>
 }

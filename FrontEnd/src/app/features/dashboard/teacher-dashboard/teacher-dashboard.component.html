@@ -4,9 +4,17 @@
 </header>
 
 @if (loading()) {
-  <p class="text-base-content/70">Loading quizzes…</p>
+  <app-state-panel
+    variant="loading"
+    title="Loading quizzes"
+    message="Please wait while your dashboard loads."
+  />
 } @else if (error()) {
-  <p class="text-error">{{ error() }}</p>
+  <app-state-panel
+    variant="error"
+    title="Unable to load your dashboard"
+    [message]="error()!"
+  />
 } @else {
   <section class="grid grid-cols-1 items-stretch gap-4 md:grid-cols-3">
     <div class="card h-full border border-l-4 border-primary/20 border-l-primary bg-base-100 shadow-sm rounded-2xl">
@@ -55,6 +63,14 @@
     <div class="card-body">
       <p class="card-title">My Quizzes</p>
       <div class="overflow-x-auto">
+        @if (myQuizzes().length === 0) {
+          <app-state-panel
+            title="No quizzes yet"
+            message="Create your first AI-drafted quiz to start building your classroom library."
+          >
+            <a class="btn btn-primary btn-sm" routerLink="/teacher/generator">Generate a quiz</a>
+          </app-state-panel>
+        } @else {
         <table class="table table-sm">
           <thead>
           <tr>
@@ -79,6 +95,7 @@
             }
           </tbody>
         </table>
+        }
       </div>
     </div>
   </section>

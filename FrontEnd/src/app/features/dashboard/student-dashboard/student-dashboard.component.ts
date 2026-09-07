@@ -4,10 +4,11 @@ import { RouterLink } from '@angular/router';
 
 import { QuizService } from '../../../core/services/quiz.service';
 import { AvailableQuiz, QuizResult } from '../../../core/models/quiz.model';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 @Component({
   selector: 'app-student-dashboard',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'student-dashboard.component.html',
 })

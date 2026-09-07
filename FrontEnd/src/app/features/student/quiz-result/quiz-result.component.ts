@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { AnswerOption, QuestionResult, QuizResult, SubmitQuizResponse } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 /**
  * Exit point of the quiz-taking flow: shows the score `TakeQuizComponent` just computed
@@ -14,7 +15,7 @@ import { QuizService } from '../../../core/services/quiz.service';
  */
 @Component({
   selector: 'app-quiz-result',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'quiz-result.component.html',
 })
@@ -27,6 +28,7 @@ export class QuizResultComponent implements OnInit {
   protected readonly justSubmitted = signal<SubmitQuizResponse | null>(null);
   protected readonly pastResults = signal<QuizResult[]>([]);
   protected readonly loading = signal(true);
+  protected readonly loadError = signal<string | null>(null);
 
   protected readonly scorePercent = computed(() => {
     const result = this.justSubmitted();
@@ -68,7 +70,10 @@ export class QuizResultComponent implements OnInit {
         this.pastResults.set(results);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.loadError.set('Could not load your quiz results.');
+        this.loading.set(false);
+      },
     });
   }
 }

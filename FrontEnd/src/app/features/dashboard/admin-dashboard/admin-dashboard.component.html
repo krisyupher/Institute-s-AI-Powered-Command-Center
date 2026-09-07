@@ -1,7 +1,15 @@
 @if (loading()) {
-  <p class="text-base-content/70">Loading analytics…</p>
+  <app-state-panel
+    variant="loading"
+    title="Loading analytics"
+    message="Please wait while the institution metrics load."
+  />
 } @else if (error()) {
-  <p class="text-error">{{ error() }}</p>
+  <app-state-panel
+    variant="error"
+    title="Unable to load analytics"
+    [message]="error()!"
+  />
 } @else {
   <header class="mb-6">
     <h1 class="text-2xl font-semibold">Institution Overview</h1>
@@ -84,6 +92,12 @@
     <div class="card-body">
       <p class="card-title">Quiz Performance Summary</p>
       <div class="overflow-x-auto">
+        @if (quizSubjectStats().length === 0) {
+          <app-state-panel
+            title="No quiz performance yet"
+            message="Performance details will appear after quizzes are created."
+          />
+        } @else {
         <table class="table table-sm">
           <thead>
           <tr>
@@ -106,6 +120,7 @@
             }
           </tbody>
         </table>
+        }
       </div>
     </div>
   </section>
@@ -114,22 +129,29 @@
   <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
     <div class="card-body">
       <p class="card-title">Recent Quiz Activity</p>
-      <div class="space-y-3">
-        @for (activity of recentActivities(); track activity.id) {
-          <div class="border-b border-base-200 pb-2 last:border-b-0">
-            <div class="flex items-center justify-between gap-3">
-              <strong>{{ activity.title }}</strong>
-              <span class="badge"
-                    [class]="{'badge-success': activity.status === 'completed', 'badge-warning': activity.status === 'pending'}">
-                  {{ activity.status }}
-                </span>
+      @if (recentActivities().length === 0) {
+        <app-state-panel
+          title="No recent activity"
+          message="New quiz activity will appear here as students and teachers use the system."
+        />
+      } @else {
+        <div class="space-y-3">
+          @for (activity of recentActivities(); track activity.id) {
+            <div class="border-b border-base-200 pb-2 last:border-b-0">
+              <div class="flex items-center justify-between gap-3">
+                <strong>{{ activity.title }}</strong>
+                <span class="badge"
+                      [class]="{'badge-success': activity.status === 'completed', 'badge-warning': activity.status === 'pending'}">
+                    {{ activity.status }}
+                  </span>
+              </div>
+              <div class="text-sm text-base-content/70">
+                {{ activity.student }} · {{ activity.date }}
+              </div>
             </div>
-            <div class="text-sm text-base-content/70">
-              {{ activity.student }} · {{ activity.date }}
-            </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
     </div>
   </section>
 }

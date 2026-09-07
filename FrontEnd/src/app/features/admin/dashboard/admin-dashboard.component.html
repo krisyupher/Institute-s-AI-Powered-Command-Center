@@ -4,9 +4,17 @@
 </header>
 
 @if (loading()) {
-  <p class="text-base-content/70">Loading analytics…</p>
+  <app-state-panel
+    variant="loading"
+    title="Loading analytics"
+    message="Please wait while the system metrics load."
+  />
 } @else if (error()) {
-  <p class="text-error">{{ error() }}</p>
+  <app-state-panel
+    variant="error"
+    title="Unable to load analytics"
+    [message]="error()!"
+  />
 } @else if (stats(); as dashboard) {
   <section class="grid grid-cols-1 items-stretch gap-4 md:grid-cols-3">
     <div class="card h-full border border-l-4 border-primary/20 border-l-primary bg-base-100 shadow-sm rounded-2xl">
@@ -58,7 +66,10 @@
         Every quiz in the system with general statistics and the teacher who created it.
       </p>
       @if (quizzes().length === 0) {
-        <p class="py-4 text-base-content/70">No quizzes have been created yet.</p>
+        <app-state-panel
+          title="No quizzes yet"
+          message="Quizzes will appear here after teachers create them."
+        />
       } @else {
         <div class="overflow-x-auto">
           <table class="table table-zebra w-full">

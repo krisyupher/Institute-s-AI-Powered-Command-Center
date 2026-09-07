@@ -11,11 +11,17 @@
 </header>
 
 @if (loading()) {
-  <p class="text-base-content/70">Loading draft quiz…</p>
+  <app-state-panel
+    variant="loading"
+    title="Loading draft quiz"
+    message="Please wait while the quiz editor loads."
+  />
 } @else if (error()) {
-  <div class="alert alert-error">
-    <span>{{ error() }}</span>
-  </div>
+  <app-state-panel
+    variant="error"
+    title="Unable to load quiz"
+    [message]="error()!"
+  />
 } @else if (draft(); as quiz) {
   @if (isFallbackData()) {
     <div class="alert alert-info shadow-xs mb-6 text-sm" role="status">
@@ -153,9 +159,10 @@
     }
 
     @if (quiz.questions.length === 0) {
-      <div class="alert">
-        <span>No questions left. Add more before publishing.</span>
-      </div>
+      <app-state-panel
+        title="No questions yet"
+        message="Add at least one question before publishing this quiz."
+      />
     }
   </section>
 

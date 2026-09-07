@@ -11,28 +11,26 @@
 </header>
 
 @if (loadError()) {
-  <div class="alert alert-error">
-    <span>{{ loadError() }}</span>
-  </div>
+  <app-state-panel
+    variant="error"
+    title="Unable to load your quizzes"
+    [message]="loadError()!"
+  />
 }
 
 @if (loading()) {
-  <div class="flex flex-col items-center gap-3 py-16 text-base-content/60">
-    <span class="loading loading-spinner loading-lg"></span>
-    <span>Loading your quizzes…</span>
-  </div>
+  <app-state-panel
+    variant="loading"
+    title="Loading your quizzes"
+    message="Please wait while your quiz library loads."
+  />
 } @else if (quizzes().length === 0) {
-  <div class="card bg-base-100 border border-base-200 shadow-sm">
-    <div class="card-body items-center text-center">
-      <h2 class="card-title">No quizzes yet</h2>
-      <p class="text-base-content/70">
-        You haven't created any quizzes. Generate your first AI-drafted quiz to get started.
-      </p>
-      <div class="card-actions mt-2">
-        <a routerLink="/teacher/generator" class="btn btn-primary">+ Create New Quiz</a>
-      </div>
-    </div>
-  </div>
+  <app-state-panel
+    title="No quizzes yet"
+    message="Generate your first AI-drafted quiz to get started."
+  >
+    <a routerLink="/teacher/generator" class="btn btn-primary">Create New Quiz</a>
+  </app-state-panel>
 } @else {
   <div class="card bg-base-100 border border-base-200 shadow-sm">
     <div class="overflow-x-auto">
