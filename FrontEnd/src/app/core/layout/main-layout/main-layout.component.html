@@ -4,8 +4,10 @@
   <div class="drawer flex-1 min-h-0 overflow-hidden lg:drawer-open">
     <input id="app-drawer" type="checkbox" class="drawer-toggle" />
 
-    <main class="drawer-content min-h-0 overflow-y-auto p-6 pb-10">
-      <router-outlet></router-outlet>
+    <main class="drawer-content min-h-0 overflow-y-auto p-4 pb-10 sm:p-6 sm:pb-10 lg:p-8 lg:pb-10">
+      <div class="mx-auto w-full max-w-7xl">
+        <router-outlet></router-outlet>
+      </div>
     </main>
 
     <div class="drawer-side z-20">
