@@ -49,6 +49,18 @@ describe('SidebarComponent', () => {
     expect(menu.className).toContain('min-h-0');
   });
 
+  it('renders an accessible icon and active-state classes for every navigation link', () => {
+    const fixture = setup('Teacher');
+    const links = Array.from<HTMLAnchorElement>(fixture.nativeElement.querySelectorAll('a'));
+
+    expect(links).toHaveLength(3);
+    expect(links.every((link) => link.querySelector('svg[aria-hidden="true"]'))).toBe(true);
+    expect(links.every((link) => link.className.includes('rounded-lg'))).toBe(true);
+    expect(links.every((link) => link.className.includes('focus-visible:outline-primary'))).toBe(
+      true,
+    );
+  });
+
   describe('mobile drawer auto-close', () => {
     afterEach(() => {
       document.getElementById('app-drawer')?.remove();

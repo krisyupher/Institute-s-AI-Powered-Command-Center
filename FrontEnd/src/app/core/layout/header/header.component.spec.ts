@@ -38,7 +38,8 @@ describe('HeaderComponent', () => {
   it('renders the brand link', () => {
     const { fixture } = setup();
     const brand = fixture.nativeElement.querySelector('a[routerLink="/dashboard"]');
-    expect(brand?.textContent?.trim()).toBe('AI Manager');
+    const brandLabel = brand?.querySelector('span:not([aria-hidden="true"])');
+    expect(brandLabel?.textContent?.trim()).toBe('AI Manager');
   });
 
   it("shows the signed-in user's initials and role badge", () => {

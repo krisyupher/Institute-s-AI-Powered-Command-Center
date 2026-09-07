@@ -6,7 +6,10 @@ import { AuthService } from '../../services/auth.service';
 interface NavItem {
   label: string;
   route: string;
+  icon: NavIcon;
 }
+
+type NavIcon = 'dashboard' | 'sparkles' | 'list' | 'results';
 
 /**
  * Side navigation for the shell. The links are role-specific, so the list is derived
@@ -26,18 +29,18 @@ export class SidebarComponent {
     switch (this.auth.role()) {
       case 'Teacher':
         return [
-          { label: 'Dashboard', route: '/dashboard/teacher' },
-          { label: 'Create AI Quiz', route: '/teacher/generator' },
-          { label: 'My Quizzes', route: '/teacher/quizzes' },
+          { label: 'Dashboard', route: '/dashboard/teacher', icon: 'dashboard' },
+          { label: 'Create AI Quiz', route: '/teacher/generator', icon: 'sparkles' },
+          { label: 'My Quizzes', route: '/teacher/quizzes', icon: 'list' },
         ];
       case 'Student':
         return [
-          { label: 'Dashboard', route: '/dashboard/student' },
-          { label: 'Available Quizzes', route: '/student/quizzes' },
-          { label: 'My Results', route: '/student/results' },
+          { label: 'Dashboard', route: '/dashboard/student', icon: 'dashboard' },
+          { label: 'Available Quizzes', route: '/student/quizzes', icon: 'list' },
+          { label: 'My Results', route: '/student/results', icon: 'results' },
         ];
       case 'Admin':
-        return [{ label: 'Dashboard', route: '/admin/dashboard' }];
+        return [{ label: 'Dashboard', route: '/admin/dashboard', icon: 'dashboard' }];
       default:
         return [];
     }
