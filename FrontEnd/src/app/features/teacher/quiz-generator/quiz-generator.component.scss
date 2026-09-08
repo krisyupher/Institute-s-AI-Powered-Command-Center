@@ -1,3 +1,26 @@
 :host {
   display: block;
+  padding-bottom: 2rem;
+}
+
+// Keep native controls aligned with the shared DaisyUI surface treatment while
+// retaining a stronger focus cue for keyboard users.
+:host .select,
+:host .input {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+:host .select:focus,
+:host .input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 18%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host .select,
+  :host .input {
+    transition: none;
+  }
 }

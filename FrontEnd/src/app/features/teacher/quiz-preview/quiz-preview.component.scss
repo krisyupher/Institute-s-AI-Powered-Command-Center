@@ -3,8 +3,62 @@
   padding-bottom: 2rem;
 }
 
+.preview-question-card {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease;
+}
+
+.preview-question-card:hover,
+.preview-question-card:focus-within {
+  border-color: color-mix(in oklab, var(--color-primary) 28%, var(--color-base-200));
+  box-shadow: 0 0.75rem 1.5rem -1.25rem color-mix(in oklab, var(--color-base-content) 55%, transparent);
+}
+
+.question-drag-handle {
+  color: color-mix(in oklab, var(--color-base-content) 52%, transparent);
+}
+
+.question-drag-handle:active {
+  cursor: grabbing;
+}
+
+.option-field {
+  min-height: 6.5rem;
+}
+
+.option-field:hover,
+.option-field:focus-within {
+  border-color: color-mix(in oklab, var(--color-primary) 35%, var(--color-base-200));
+  background-color: color-mix(in oklab, var(--color-primary) 4%, var(--color-base-100));
+}
+
 .correct-option {
   border-color: var(--color-success);
   background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
   box-shadow: 0 0.25rem 0.75rem -0.5rem var(--color-success);
+}
+
+.correct-option:hover,
+.correct-option:focus-within {
+  border-color: var(--color-success);
+  background-color: color-mix(in srgb, var(--color-success) 14%, transparent);
+}
+
+.preview-action-bar {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  box-shadow: 0 -0.5rem 1.5rem -1.25rem rgb(15 23 42 / 45%);
+}
+
+@media (min-width: 640px) {
+  .preview-action-bar {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-question-card {
+    transition: none;
+  }
 }
