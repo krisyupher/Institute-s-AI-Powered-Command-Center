@@ -24,6 +24,7 @@ export class QuizResultComponent implements OnInit {
 
   /** Minimum percentage score required to pass a quiz. */
   protected static readonly PASSING_PERCENT = 60;
+  protected readonly passingPercent = QuizResultComponent.PASSING_PERCENT;
 
   protected readonly justSubmitted = signal<SubmitQuizResponse | null>(null);
   protected readonly pastResults = signal<QuizResult[]>([]);
@@ -39,6 +40,18 @@ export class QuizResultComponent implements OnInit {
   protected readonly passed = computed(
     () => this.scorePercent() >= QuizResultComponent.PASSING_PERCENT,
   );
+
+  protected readonly historySummary = computed(() => {
+    const results = this.pastResults();
+    const passedCount = results.filter((result) => this.isPassed(result)).length;
+    const totalScore = results.reduce((sum, result) => sum + result.score, 0);
+
+    return {
+      attempts: results.length,
+      passed: passedCount,
+      averageScore: results.length > 0 ? Math.round(totalScore / results.length) : 0,
+    };
+  });
 
   /** True when a historical result's score meets the passing threshold. */
   protected isPassed(result: QuizResult): boolean {

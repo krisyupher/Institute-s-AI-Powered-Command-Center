@@ -1,65 +1,140 @@
 <header class="mb-6">
-  <h1 class="text-2xl font-semibold">My results</h1>
-  <p class="mt-1 text-base-content/70">Your quiz history and latest score.</p>
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Progress snapshot</p>
+      <h1 class="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">My results</h1>
+      <p class="mt-1 text-base-content/70">Review your latest score and keep an eye on your quiz progress.</p>
+    </div>
+    <a class="btn btn-primary btn-sm w-fit" routerLink="/student/quizzes">Browse quizzes</a>
+  </div>
 </header>
 
 @if (justSubmitted(); as result) {
-  <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl mb-6">
-    <div class="card-body items-center text-center">
-      <h2 class="card-title">Quiz submitted!</h2>
-      <p class="text-4xl font-bold text-primary">{{ scorePercent() }}%</p>
-      <span class="badge badge-lg" [class.badge-success]="passed()" [class.badge-error]="!passed()">
-        {{ passed() ? 'Pass' : 'Fail' }}
-      </span>
-      <progress
-        class="progress progress-success w-56"
-        [value]="result.correctCount"
-        [attr.max]="result.totalQuestions"
-      ></progress>
-      <p class="mt-2">
-        You answered <span class="font-semibold">{{ result.correctCount }}</span> out of
-        <span class="font-semibold">{{ result.totalQuestions }}</span> questions correctly.
-      </p>
-      <p class="text-sm text-base-content/60">
-        Completed {{ result.completedAt | date: 'medium' }}
-      </p>
-      <a class="btn btn-primary btn-sm mt-4" routerLink="/student/quizzes">Back to available quizzes</a>
+  <section
+    class="mb-6 overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-base-100 to-base-100 shadow-sm"
+    aria-labelledby="latest-result-heading"
+  >
+    <div class="card-body gap-6 p-5 sm:p-8">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Latest submission</p>
+          <h2 id="latest-result-heading" class="mt-1 text-2xl font-semibold tracking-tight">Quiz submitted!</h2>
+          <p class="mt-1 text-sm text-base-content/70">
+            Completed quiz #{{ result.quizId }} on {{ result.completedAt | date: 'medium' }}
+          </p>
+        </div>
+        <span
+          class="badge badge-lg gap-2 self-start px-4"
+          [class.badge-success]="passed()"
+          [class.badge-error]="!passed()"
+          role="status"
+        >
+          <span class="h-2 w-2 rounded-full bg-current" aria-hidden="true"></span>
+          {{ passed() ? 'Pass' : 'Fail' }}
+        </span>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-[minmax(12rem,0.8fr)_minmax(0,1.2fr)]">
+        <div class="rounded-2xl bg-base-100/80 p-5 ring-1 ring-base-content/10">
+          <p class="text-sm font-medium text-base-content/70">Overall score</p>
+          <p class="mt-2 text-5xl font-bold tracking-tight text-primary">
+            {{ scorePercent() }}<span class="text-2xl">%</span>
+          </p>
+          <p class="mt-2 text-sm text-base-content/70">
+            Passing score: <span class="font-semibold text-base-content">{{ passingPercent }}%</span>
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-base-content/10 bg-base-100/55 p-5">
+          <div class="flex items-center justify-between gap-3">
+            <p class="font-semibold">Answer accuracy</p>
+            <span class="text-sm font-semibold tabular-nums">{{ result.correctCount }}/{{ result.totalQuestions }}</span>
+          </div>
+          <progress
+            class="progress mt-4 w-full"
+            [class.progress-success]="passed()"
+            [class.progress-error]="!passed()"
+            [value]="result.correctCount"
+            [attr.max]="result.totalQuestions"
+            aria-label="Correct answers"
+          ></progress>
+          <p class="mt-3 text-sm text-base-content/70">
+            You answered <span class="font-semibold text-base-content">{{ result.correctCount }}</span> out of
+            <span class="font-semibold text-base-content">{{ result.totalQuestions }}</span> questions correctly.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <a class="btn btn-primary btn-sm" routerLink="/student/quizzes">Take another quiz</a>
+        @if (result.questionResults && result.questionResults.length > 0) {
+          <a class="btn btn-ghost btn-sm" href="#question-review">Review answers</a>
+        }
+      </div>
     </div>
   </section>
 
   @if (result.questionResults && result.questionResults.length > 0) {
-    <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl mb-6">
-      <div class="card-body">
-        <h2 class="card-title text-base">Question review</h2>
-        <ul class="space-y-4">
-          @for (qr of result.questionResults; track qr.questionId) {
-            <li class="border border-base-200 rounded-xl p-3">
+    <section
+      id="question-review"
+      class="card mb-6 rounded-2xl border border-base-200 bg-base-100 shadow-xs"
+      aria-labelledby="question-review-heading"
+    >
+      <div class="card-body gap-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-base-content/55">Detailed feedback</p>
+            <h2 id="question-review-heading" class="card-title mt-1 text-xl">Question review</h2>
+          </div>
+          <span class="badge badge-ghost w-fit">{{ result.questionResults.length }} questions</span>
+        </div>
+
+        <ol class="space-y-3">
+          @for (qr of result.questionResults; track qr.questionId; let questionIndex = $index) {
+            <li
+              class="rounded-2xl border p-4 transition-colors"
+              [class.border-success/30]="qr.isCorrect"
+              [class.bg-success/5]="qr.isCorrect"
+              [class.border-error/30]="!qr.isCorrect"
+              [class.bg-error/5]="!qr.isCorrect"
+            >
               <div class="flex items-start justify-between gap-3">
-                <p class="font-medium">{{ qr.text }}</p>
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold uppercase tracking-[0.14em] text-base-content/55">
+                    Question {{ questionIndex + 1 }}
+                  </p>
+                  <p class="mt-1 font-medium leading-6">{{ qr.text }}</p>
+                </div>
                 <span
-                  class="badge badge-sm shrink-0"
+                  class="badge badge-sm shrink-0 gap-1.5"
                   [class.badge-success]="qr.isCorrect"
                   [class.badge-error]="!qr.isCorrect"
+                  role="status"
                 >
+                  <span class="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true"></span>
                   {{ qr.isCorrect ? 'Correct' : 'Incorrect' }}
                 </span>
               </div>
-              <p class="mt-1 text-sm" [class.text-base-content/70]="qr.isCorrect">
-                Your answer:
-                @if (qr.isCorrect) {
-                  <span class="font-semibold text-success">{{ qr.selectedAnswer }}. {{ optionText(qr, qr.selectedAnswer) }}</span>
-                } @else {
-                  <span class="font-semibold text-error">{{ qr.selectedAnswer }}. {{ optionText(qr, qr.selectedAnswer) }}</span>
+
+              <div class="mt-4 grid gap-2 sm:grid-cols-2">
+                <div class="rounded-xl bg-base-100/75 px-3 py-2.5 ring-1 ring-base-content/10">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-base-content/55">Your answer</p>
+                  @if (qr.isCorrect) {
+                    <p class="mt-1 font-semibold text-success">{{ qr.selectedAnswer }}. {{ optionText(qr, qr.selectedAnswer) }}</p>
+                  } @else {
+                    <p class="mt-1 font-semibold text-error">{{ qr.selectedAnswer }}. {{ optionText(qr, qr.selectedAnswer) }}</p>
+                  }
+                </div>
+                @if (!qr.isCorrect) {
+                  <div class="rounded-xl bg-base-100/75 px-3 py-2.5 ring-1 ring-base-content/10">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-base-content/55">Correct answer</p>
+                    <p class="mt-1 font-semibold text-success">{{ qr.correctAnswer }}. {{ optionText(qr, qr.correctAnswer) }}</p>
+                  </div>
                 }
-              </p>
-              @if (!qr.isCorrect) {
-                <p class="text-sm text-base-content/70">
-                  Correct answer: <span class="font-semibold">{{ qr.correctAnswer }}. {{ optionText(qr, qr.correctAnswer) }}</span>
-                </p>
-              }
+              </div>
             </li>
           }
-        </ul>
+        </ol>
       </div>
     </section>
   }
@@ -78,9 +153,31 @@
     [message]="loadError()!"
   />
 } @else if (pastResults().length > 0) {
-  <section class="card bg-base-100 border border-base-200 shadow-xs rounded-2xl">
-      <div class="card-body">
-        <h2 class="card-title text-base">Past results</h2>
+  <section class="card rounded-2xl border border-base-200 bg-base-100 shadow-xs" aria-labelledby="history-heading">
+    <div class="card-body gap-5 p-5 sm:p-6">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.16em] text-base-content/55">Your activity</p>
+          <h2 id="history-heading" class="card-title mt-1 text-xl">Past results</h2>
+        </div>
+        <span class="text-sm text-base-content/65">Passing score: {{ passingPercent }}%</span>
+      </div>
+
+      <dl class="grid gap-3 sm:grid-cols-3">
+        <div class="rounded-2xl bg-base-200/55 p-4">
+          <dt class="text-sm text-base-content/65">Attempts</dt>
+          <dd class="mt-1 text-2xl font-bold tabular-nums">{{ historySummary().attempts }}</dd>
+        </div>
+        <div class="rounded-2xl bg-success/10 p-4">
+          <dt class="text-sm text-base-content/65">Passed</dt>
+          <dd class="mt-1 text-2xl font-bold tabular-nums text-success">{{ historySummary().passed }}</dd>
+        </div>
+        <div class="rounded-2xl bg-primary/10 p-4">
+          <dt class="text-sm text-base-content/65">Average score</dt>
+          <dd class="mt-1 text-2xl font-bold tabular-nums text-primary">{{ historySummary().averageScore }}%</dd>
+        </div>
+      </dl>
+
       <div class="app-table-scroll">
         <table class="table app-data-table w-full">
           <caption class="sr-only">Quiz result history</caption>
@@ -94,15 +191,21 @@
           </thead>
           <tbody>
             @for (result of pastResults(); track result.id) {
-              <tr>
-                <td>Quiz #{{ result.quizId }}</td>
-                <td class="app-table-number">{{ result.score }}%</td>
+              <tr [class.bg-success/5]="isPassed(result)" [class.bg-error/5]="!isPassed(result)">
+                <td>
+                  <span class="font-semibold">Quiz #{{ result.quizId }}</span>
+                </td>
+                <td class="app-table-number">
+                  <span class="font-semibold tabular-nums">{{ result.score }}%</span>
+                </td>
                 <td>
                   <span
-                    class="badge badge-sm"
+                    class="badge badge-sm gap-1.5"
                     [class.badge-success]="isPassed(result)"
                     [class.badge-error]="!isPassed(result)"
+                    role="status"
                   >
+                    <span class="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true"></span>
                     {{ isPassed(result) ? 'Pass' : 'Fail' }}
                   </span>
                 </td>
