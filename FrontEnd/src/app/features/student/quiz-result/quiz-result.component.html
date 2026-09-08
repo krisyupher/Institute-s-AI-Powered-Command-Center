@@ -11,10 +11,10 @@
 
 @if (justSubmitted(); as result) {
   <section
-    class="mb-6 overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-base-100 to-base-100 shadow-sm"
+    class="card mb-6 overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-base-100 to-base-100 shadow-sm"
     aria-labelledby="latest-result-heading"
   >
-    <div class="card-body gap-6 p-5 sm:p-8">
+    <div class="card-body gap-5 p-5 sm:p-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p class="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Latest submission</p>
@@ -77,7 +77,7 @@
   @if (result.questionResults && result.questionResults.length > 0) {
     <section
       id="question-review"
-      class="card mb-6 rounded-2xl border border-base-200 bg-base-100 shadow-xs"
+      class="card mb-6 rounded-2xl border border-base-200 bg-base-100 shadow-sm"
       aria-labelledby="question-review-heading"
     >
       <div class="card-body gap-5 p-5 sm:p-6">
@@ -153,7 +153,7 @@
     [message]="loadError()!"
   />
 } @else if (pastResults().length > 0) {
-  <section class="card rounded-2xl border border-base-200 bg-base-100 shadow-xs" aria-labelledby="history-heading">
+  <section class="card rounded-2xl border border-base-200 bg-base-100 shadow-sm" aria-labelledby="history-heading">
     <div class="card-body gap-5 p-5 sm:p-6">
       <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -178,10 +178,10 @@
         </div>
       </dl>
 
-      <div class="app-table-scroll">
+      <div class="app-table-scroll max-h-96 overflow-y-auto overscroll-contain">
         <table class="table app-data-table w-full">
           <caption class="sr-only">Quiz result history</caption>
-          <thead>
+          <thead class="sticky top-0 z-10">
             <tr>
               <th scope="col">Quiz</th>
               <th scope="col" class="app-table-number">Score</th>
