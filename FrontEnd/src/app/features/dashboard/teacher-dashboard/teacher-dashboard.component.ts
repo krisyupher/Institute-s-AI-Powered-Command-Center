@@ -4,10 +4,11 @@ import { RouterLink } from '@angular/router';
 
 import { QuizService } from '../../../core/services/quiz.service';
 import { Quiz } from '../../../core/models/quiz.model';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 @Component({
   selector: 'app-teacher-dashboard',
-  imports: [RouterLink, NgClass, DatePipe],
+  imports: [RouterLink, NgClass, DatePipe, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'teacher-dashboard.component.html',
 })

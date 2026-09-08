@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [],
+  imports: [StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'admin-dashboard.component.html',
 })

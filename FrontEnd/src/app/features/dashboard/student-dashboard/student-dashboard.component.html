@@ -1,76 +1,170 @@
 <header class="mb-6">
-  <h1 class="text-2xl font-semibold">Welcome back, Student</h1>
-  <p class="mt-1 text-base-content/70">Upcoming quizzes and results</p>
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Student dashboard</p>
+      <h1 class="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Welcome back, Student</h1>
+      <p class="mt-1 max-w-2xl text-base-content/70">Pick up where you left off and keep building your quiz progress.</p>
+    </div>
+    <a class="btn btn-primary btn-sm w-fit" routerLink="/student/quizzes">Browse all quizzes</a>
+  </div>
 </header>
 
 @if (loading()) {
-  <p class="text-base-content/70">Loading quizzes…</p>
+  <app-state-panel
+    variant="loading"
+    title="Loading your dashboard"
+    message="Please wait while your quizzes and results load."
+  />
 } @else if (error()) {
-  <p class="text-error">{{ error() }}</p>
+  <app-state-panel
+    variant="error"
+    title="Unable to load your dashboard"
+    [message]="error()!"
+  />
 } @else {
-  <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <!-- Upcoming Quizzes -->
-    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
-      <div class="card-body p-5">
-        <h2 class="card-title text-lg font-semibold">Next Upcoming Quizzes</h2>
-        <div class="mt-2 max-h-64 overflow-y-auto pr-1">
-          <div class="border-t border-base-200 pt-3">
-            <div class="text-sm text-base-content/70">Available Quizzes</div>
-            @for (quiz of upcomingQuizzes(); track quiz.id) {
-              <div class="py-2">
-                <div class="text-base font-medium">{{ quiz.title }}</div>
-                <div class="text-xs text-base-content/60">Quiz #{{ quiz.id }}</div>
-              </div>
-            }
-          </div>
-          @if (upcomingQuizzes().length === 0) {
-            <div class="text-sm text-base-content/70">No upcoming quizzes</div>
-          }
+  <section class="mb-6 grid grid-cols-1 items-stretch gap-4 sm:grid-cols-3" aria-label="Progress summary">
+    <div class="card h-full rounded-2xl border border-l-4 border-primary/20 border-l-primary bg-base-100 shadow-sm">
+      <div class="card-body flex-row items-start justify-between gap-4 p-5">
+        <div>
+          <div class="text-3xl font-semibold leading-tight tabular-nums">{{ progressSummary().available }}</div>
+          <div class="mt-1 text-sm text-base-content/70">Available quizzes</div>
+        </div>
+        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 4.5A2.5 2.5 0 0 1 8.5 2H20v17.5A2.5 2.5 0 0 0 17.5 17H6a2 2 0 0 1-2-2V6.5A2.5 2.5 0 0 1 6 4.5Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 6h8M8 10h8M8 14h5" />
+          </svg>
         </div>
       </div>
     </div>
 
-    <!-- Recent Results -->
-    <div class="card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
-      <div class="card-body p-5">
-        <h2 class="card-title text-lg font-semibold">Your Quiz Results</h2>
-        <div class="mt-2 max-h-64 overflow-y-auto pr-1">
-          @if (recentResults().length > 0) {
-            @for (result of recentResults(); track result.id) {
-              <div class="border-t border-base-200 pt-3">
-                <div class="text-sm text-base-content/70">
-                  Quiz #{{ result.quizId }}
-                </div>
-                <div class="text-base-content/90 font-medium text-lg mb-1">
-                  Score: {{ result.score }}
-                </div>
-                <div class="text-xs text-base-content/60">
-                  Completed: {{ result.completedAt | date: 'd MMM' }}
-                </div>
-              </div>
-            }
-          } @else {
-            <div class="text-sm text-base-content/70">
-              You haven't taken any quizzes yet
-            </div>
-          }
+    <div class="card h-full rounded-2xl border border-l-4 border-success/20 border-l-success bg-base-100 shadow-sm">
+      <div class="card-body flex-row items-start justify-between gap-4 p-5">
+        <div>
+          <div class="text-3xl font-semibold leading-tight tabular-nums">{{ progressSummary().completed }}</div>
+          <div class="mt-1 text-sm text-base-content/70">Completed attempts</div>
+        </div>
+        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-success/10 text-success">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m5 12 4 4L19 6" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card h-full rounded-2xl border border-l-4 border-secondary/20 border-l-secondary bg-base-100 shadow-sm">
+      <div class="card-body flex-row items-start justify-between gap-4 p-5">
+        <div>
+          <div class="text-3xl font-semibold leading-tight tabular-nums">{{ progressSummary().averageScore }}%</div>
+          <div class="mt-1 text-sm text-base-content/70">Average score</div>
+        </div>
+        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/10 text-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 19V5m0 14h16M7 16v-4m4 4V8m4 8V5m4 11V9" />
+          </svg>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="mt-6 card bg-base-100 shadow-sm border border-base-200 rounded-2xl">
-    <div class="card-body">
-      <p class="card-title">My Results Summary</p>
-      <div class="grid grid-cols-1 gap-3">
-        <div class="text-center p-4 border-base-200 rounded-lg bg-base-200">
-          <div class="text-xl font-medium">My Progress</div>
-          <div class="mt-2 text-base-content/60">Completed quizzes: <span [textContent]="recentResults().length"></span></div>
+  <section class="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
+    <article class="card rounded-2xl border border-base-200 bg-base-100 shadow-sm" aria-labelledby="available-quizzes-heading">
+      <div class="card-body gap-5 p-5 sm:p-6">
+        <div class="flex items-end justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Keep learning</p>
+            <h2 id="available-quizzes-heading" class="card-title mt-1 text-xl">Continue with a quiz</h2>
+          </div>
+          <div class="flex items-center gap-3">
+            <a class="link link-primary text-sm font-semibold" routerLink="/student/quizzes">View all</a>
+            <span class="badge badge-ghost shrink-0">{{ upcomingQuizzes().length }} available</span>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <a routerLink="/student/quizzes" class="btn btn-primary">Browse quizzes</a>
-          <a routerLink="/student/results" class="btn btn-outline">My results</a>
+
+        @if (upcomingQuizzes().length > 0) {
+          <ul class="max-h-80 divide-y divide-base-200 overflow-y-auto overscroll-contain rounded-xl border border-base-200">
+            @for (quiz of upcomingQuizzes(); track quiz.id) {
+              <li class="flex flex-col gap-4 p-4 transition-colors hover:bg-base-200/45 sm:flex-row sm:items-center sm:justify-between">
+                <div class="min-w-0">
+                  <p class="font-semibold leading-6">{{ quiz.title }}</p>
+                  <p class="mt-1 text-sm text-base-content/65">
+                    {{ quiz.subject.name }}<span class="mx-1.5" aria-hidden="true">·</span>{{ quiz.questionCount }} questions
+                  </p>
+                </div>
+                <a class="btn btn-primary btn-sm w-full shrink-0 sm:w-auto" [routerLink]="['/student/quizzes', quiz.id]">
+                  Start quiz
+                </a>
+              </li>
+            }
+          </ul>
+        } @else {
+          <app-state-panel
+            title="No upcoming quizzes"
+            message="Published quizzes will appear here when they are ready."
+          >
+            <a class="btn btn-outline btn-sm" routerLink="/student/quizzes">Refresh quiz list</a>
+          </app-state-panel>
+        }
+      </div>
+    </article>
+
+    <article class="card rounded-2xl border border-base-200 bg-base-100 shadow-sm" aria-labelledby="recent-results-heading">
+      <div class="card-body gap-5 p-5 sm:p-6">
+        <div class="flex items-end justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-success">Your activity</p>
+            <h2 id="recent-results-heading" class="card-title mt-1 text-xl">Recent results</h2>
+          </div>
+          <a class="link link-primary text-sm font-semibold" routerLink="/student/results">View all</a>
         </div>
+
+        @if (recentResults().length > 0) {
+          <ul class="max-h-80 divide-y divide-base-200 overflow-y-auto overscroll-contain rounded-xl border border-base-200">
+            @for (result of recentResults(); track result.id) {
+              <li class="flex items-center justify-between gap-4 p-4">
+                <div class="min-w-0">
+                  <p class="font-semibold">Quiz #{{ result.quizId }}</p>
+                  <p class="mt-1 text-sm text-base-content/65">Completed {{ result.completedAt | date: 'd MMM y' }}</p>
+                </div>
+                <div class="flex shrink-0 flex-col items-end gap-1.5">
+                  <span class="font-bold tabular-nums" [class.text-success]="isPassed(result)" [class.text-error]="!isPassed(result)">
+                    Score: {{ result.score }}
+                  </span>
+                  <span
+                    class="badge badge-sm gap-1.5"
+                    [class.badge-success]="isPassed(result)"
+                    [class.badge-error]="!isPassed(result)"
+                    role="status"
+                  >
+                    <span class="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true"></span>
+                    {{ isPassed(result) ? 'Passed' : 'Needs review' }}
+                  </span>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <app-state-panel
+            title="No results yet"
+            message="You haven't taken any quizzes yet. Take a quiz to start tracking your progress."
+          >
+            <a class="btn btn-primary btn-sm" routerLink="/student/quizzes">Take your first quiz</a>
+          </app-state-panel>
+        }
+      </div>
+    </article>
+  </section>
+
+  <section class="mt-6 card overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/10 via-base-100 to-base-100 shadow-sm">
+    <div class="card-body gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Your next step</p>
+        <h2 class="mt-1 text-xl font-semibold">Ready to test what you know?</h2>
+        <p class="mt-1 text-sm text-base-content/70">The passing score for each quiz is {{ passingPercent }}%.</p>
+      </div>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <a class="btn btn-primary btn-sm" routerLink="/student/quizzes">Browse quizzes</a>
+        <a class="btn btn-ghost btn-sm" routerLink="/student/results">Review progress</a>
       </div>
     </div>
   </section>

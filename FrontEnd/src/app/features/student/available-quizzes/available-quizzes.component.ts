@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { AvailableQuiz } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 /**
  * Entry point into the student quiz-taking flow: lists published quizzes and links each
@@ -11,7 +12,7 @@ import { QuizService } from '../../../core/services/quiz.service';
  */
 @Component({
   selector: 'app-available-quizzes',
-  imports: [RouterLink],
+  imports: [RouterLink, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'available-quizzes.component.html',
 })

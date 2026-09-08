@@ -1,2 +1,28 @@
-// Layout handled entirely by Tailwind utilities in `main-layout.component.html`
-// (min-h-screen, flex column, and the sidebar/content split) — no custom styles needed.
+// The drawer is nested below a fixed header. Explicitly constraining its height lets the
+// content and menu own their scroll regions instead of allowing the drawer to overflow the
+// viewport and clip the final pixels of a page.
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.drawer {
+  min-height: 0;
+}
+
+.drawer-content {
+  min-height: 0;
+  min-width: 0;
+  overscroll-behavior: contain;
+}
+
+// DaisyUI adds overflow-y: auto to drawer-side when drawer-open (and when the mobile
+// drawer is checked). Keep the side itself from owning a second scrollbar; the menu
+// component below is the actual scroll region when navigation outgrows the viewport.
+.drawer-side,
+.drawer-open > .drawer-side,
+.drawer-toggle:checked ~ .drawer-side {
+  height: 100%;
+  overflow: hidden;
+}

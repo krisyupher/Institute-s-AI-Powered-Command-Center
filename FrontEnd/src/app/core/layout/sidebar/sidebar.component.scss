@@ -1,2 +1,16 @@
-// Layout handled entirely by the DaisyUI `menu` component and Tailwind utilities in
-// `sidebar.component.html` — no custom styles needed here.
+// The menu is the only sidebar element allowed to scroll. The shell keeps the sidebar
+// panel itself clipped so DaisyUI cannot create a second, permanently visible scrollbar.
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+// Keep the active navigation item readable when the pointer moves over it. The
+// generic hover background otherwise overrides DaisyUI's active contrast.
+.menu > li > a.menu-active,
+.menu > li > a.menu-active:hover,
+.menu > li > a.menu-active:focus-visible {
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+}

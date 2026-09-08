@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 
 import { AnswerOption, Question, Quiz } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 /**
  * Ticket 4.3: step-by-step test runner. One question per screen with a
@@ -20,6 +21,7 @@ import { QuizService } from '../../../core/services/quiz.service';
  */
 @Component({
   selector: 'app-take-quiz',
+  imports: [StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'take-quiz.component.html',
   styleUrl: 'take-quiz.component.scss',

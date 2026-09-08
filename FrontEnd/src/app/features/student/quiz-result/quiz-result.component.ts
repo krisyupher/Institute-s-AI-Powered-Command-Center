@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { AnswerOption, QuestionResult, QuizResult, SubmitQuizResponse } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 /**
  * Exit point of the quiz-taking flow: shows the score `TakeQuizComponent` just computed
@@ -14,7 +15,7 @@ import { QuizService } from '../../../core/services/quiz.service';
  */
 @Component({
   selector: 'app-quiz-result',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'quiz-result.component.html',
 })
@@ -23,10 +24,12 @@ export class QuizResultComponent implements OnInit {
 
   /** Minimum percentage score required to pass a quiz. */
   protected static readonly PASSING_PERCENT = 60;
+  protected readonly passingPercent = QuizResultComponent.PASSING_PERCENT;
 
   protected readonly justSubmitted = signal<SubmitQuizResponse | null>(null);
   protected readonly pastResults = signal<QuizResult[]>([]);
   protected readonly loading = signal(true);
+  protected readonly loadError = signal<string | null>(null);
 
   protected readonly scorePercent = computed(() => {
     const result = this.justSubmitted();
@@ -37,6 +40,18 @@ export class QuizResultComponent implements OnInit {
   protected readonly passed = computed(
     () => this.scorePercent() >= QuizResultComponent.PASSING_PERCENT,
   );
+
+  protected readonly historySummary = computed(() => {
+    const results = this.pastResults();
+    const passedCount = results.filter((result) => this.isPassed(result)).length;
+    const totalScore = results.reduce((sum, result) => sum + result.score, 0);
+
+    return {
+      attempts: results.length,
+      passed: passedCount,
+      averageScore: results.length > 0 ? Math.round(totalScore / results.length) : 0,
+    };
+  });
 
   /** True when a historical result's score meets the passing threshold. */
   protected isPassed(result: QuizResult): boolean {
@@ -68,7 +83,10 @@ export class QuizResultComponent implements OnInit {
         this.pastResults.set(results);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.loadError.set('Could not load your quiz results.');
+        this.loading.set(false);
+      },
     });
   }
 }

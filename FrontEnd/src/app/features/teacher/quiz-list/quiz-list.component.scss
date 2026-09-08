@@ -2,3 +2,25 @@
   display: block;
   padding-bottom: 2rem;
 }
+
+.quiz-row td:first-child {
+  min-width: 15rem;
+}
+
+.quiz-table-scroll {
+  max-height: min(34rem, 65vh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.quiz-table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: color-mix(in oklab, var(--color-base-200) 65%, var(--color-base-100));
+}
+
+.status-badge {
+  white-space: nowrap;
+}

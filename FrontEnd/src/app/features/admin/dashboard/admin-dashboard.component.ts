@@ -6,10 +6,11 @@ import { forkJoin } from 'rxjs';
 import { AdminQuiz, AdminStats } from '../../../core/models/admin-stats.model';
 import { AdminService } from '../../../core/services/admin.service';
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-dashboard.component.html',
 })

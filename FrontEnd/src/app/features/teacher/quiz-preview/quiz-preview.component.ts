@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 import {
   AnswerOption,
@@ -9,13 +9,14 @@ import {
   SaveQuizRequest,
 } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 /** Base of the quiz-list route for the current area (admin reuses this editor). */
 const QUIZ_LIST_PATH = { admin: '/admin/dashboard', teacher: '/teacher/quizzes' } as const;
 
 @Component({
   selector: 'app-quiz-preview',
-  imports: [RouterLink],
+  imports: [StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'quiz-preview.component.html',
   styleUrl: 'quiz-preview.component.scss',
@@ -34,6 +35,7 @@ export class QuizPreviewComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly published = signal(false);
+  protected readonly hasUnsavedChanges = signal(false);
   private readonly dragFromId = signal<number | null>(null);
   protected readonly dragTarget = signal<number | null>(null);
   /** True when loaded from the quiz list (edit mode) so save updates, not inserts. */
@@ -137,12 +139,14 @@ export class QuizPreviewComponent implements OnInit {
   protected setTitle(value: string): void {
     const draft = this.draft();
     if (!draft) return;
+    this.markDirty();
     this.draft.set({ ...draft, title: value });
   }
 
   protected updateQuestion(index: number, change: Partial<Question>): void {
     const draft = this.draft();
     if (!draft) return;
+    this.markDirty();
     const questions = draft.questions.map((question, i) =>
       i === index ? { ...question, ...change } : question,
     );
@@ -152,6 +156,7 @@ export class QuizPreviewComponent implements OnInit {
   protected deleteQuestion(index: number): void {
     const draft = this.draft();
     if (!draft) return;
+    this.markDirty();
     const questions = draft.questions.filter((_, i) => i !== index);
     this.draft.set({ ...draft, questions });
   }
@@ -164,6 +169,7 @@ export class QuizPreviewComponent implements OnInit {
   protected addQuestion(): void {
     const draft = this.draft();
     if (!draft) return;
+    this.markDirty();
     const newQuestion: Question = {
       id: -1, // placeholder
       quizId: draft.id || 0,
@@ -217,6 +223,7 @@ export class QuizPreviewComponent implements OnInit {
     const questions = [...draft.questions];
     const [moved] = questions.splice(currentIndex, 1);
     questions.splice(index, 0, moved);
+    this.markDirty();
     this.draft.set({ ...draft, questions });
   }
 
@@ -283,6 +290,7 @@ export class QuizPreviewComponent implements OnInit {
       next: () => {
         this.published.set(true);
         this.saving.set(false);
+        this.hasUnsavedChanges.set(false);
         this.draft.set({ ...draft, isPublished: true });
         // Back to the quiz list for the current area once the publish succeeds.
         this.router.navigate([this.listPath()]);
@@ -296,8 +304,26 @@ export class QuizPreviewComponent implements OnInit {
 
   /** Leave the editor without saving. */
   protected cancel(): void {
+    if (!this.confirmDiscard()) return;
     // An admin editing another teacher's quiz returns to the admin list;
     // a teacher on their own flow returns to the generator.
     this.router.navigate([this.router.url.startsWith('/admin') ? this.listPath() : '/teacher/generator']);
+  }
+
+  protected leaveEditor(event: Event): void {
+    event.preventDefault();
+    if (!this.confirmDiscard()) return;
+    this.router.navigate(['/teacher/generator']);
+  }
+
+  private markDirty(): void {
+    this.hasUnsavedChanges.set(true);
+  }
+
+  private confirmDiscard(): boolean {
+    return (
+      !this.hasUnsavedChanges() ||
+      window.confirm('You have unsaved changes. Leave the editor and discard them?')
+    );
   }
 }

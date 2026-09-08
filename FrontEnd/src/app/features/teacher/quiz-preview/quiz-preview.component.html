@@ -1,29 +1,73 @@
-<header class="mb-6 flex flex-wrap items-start justify-between gap-3">
-  <div>
-    <h1 class="text-2xl font-semibold">Preview &amp; Edit Quiz</h1>
-    <p class="mt-1 text-base-content/70">
-      Review the AI draft below. Edit any question or option, then publish when satisfied.
+<header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+  <div class="max-w-3xl">
+    <div class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-primary">
+      <span class="grid h-8 w-8 place-items-center rounded-lg bg-primary/10" aria-hidden="true">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+          focusable="false"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 3v18m9-9H3m13.5-6.5L12 9l-4.5-3.5M16.5 17.5 12 15l-4.5 2.5"
+          />
+        </svg>
+      </span>
+      Teacher workspace
+    </div>
+    <h1 class="text-3xl font-bold tracking-tight text-base-content sm:text-4xl">
+      Preview &amp; edit quiz
+    </h1>
+    <p class="mt-3 max-w-2xl text-base leading-7 text-base-content/70 sm:text-lg">
+      Review the draft, make any changes, and publish it when everything is ready.
     </p>
   </div>
-  <a class="btn btn-ghost btn-sm" routerLink="/teacher/generator">
-    ← Back to Generator
+  <a
+    class="btn btn-ghost btn-sm self-start sm:mt-1"
+    href="/teacher/generator"
+    (click)="leaveEditor($event)"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-4 w-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+    </svg>
+    Back to Generator
   </a>
 </header>
 
 @if (loading()) {
-  <p class="text-base-content/70">Loading draft quiz…</p>
+  <app-state-panel
+    variant="loading"
+    title="Loading draft quiz"
+    message="Please wait while the quiz editor loads."
+  />
 } @else if (error()) {
-  <div class="alert alert-error">
-    <span>{{ error() }}</span>
-  </div>
+  <app-state-panel
+    variant="error"
+    title="Unable to load quiz"
+    [message]="error()!"
+  />
 } @else if (draft(); as quiz) {
   @if (isFallbackData()) {
-    <div class="alert alert-info shadow-xs mb-6 text-sm" role="status">
+    <div class="alert alert-info mb-6 border border-info/20 bg-info/10 text-sm shadow-xs" role="status">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
-        class="stroke-current shrink-0 w-5 h-5"
+        class="h-5 w-5 shrink-0 stroke-current"
+        aria-hidden="true"
       >
         <path
           stroke-linecap="round"
@@ -39,24 +83,56 @@
     </div>
   }
 
-  <!-- Quiz metadata summary -->
-  <section class="card bg-base-100 border border-base-200 shadow-sm mb-4">
-    <div class="card-body">
-      <label class="form-control w-full">
-        <span class="label-text mb-1">Quiz title</span>
-        <input
-          type="text"
-          class="input input-bordered w-full"
-          [value]="quiz.title"
-          (input)="setTitle($any($event.target).value)"
-          placeholder="Quiz title"
-        />
-      </label>
+  <section class="card mb-6 border border-base-200 bg-base-100 shadow-sm" aria-label="Quiz details">
+    <div class="card-body p-5 sm:p-7">
+      <div class="flex flex-wrap items-start justify-between gap-3 border-b border-base-200 pb-5">
+        <div>
+          <span class="badge badge-primary badge-soft">Quiz details</span>
+          <p class="mt-2 text-sm text-base-content/60">
+            Confirm the title and review the quiz status before publishing.
+          </p>
+        </div>
+        <span class="badge badge-ghost gap-1.5 py-3 text-xs font-medium">
+          <span class="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true"></span>
+          Review before publish
+        </span>
+      </div>
 
-      <div class="mt-3 flex flex-wrap gap-2">
+      <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <label class="form-control w-full gap-1.5">
+          <span class="label-text font-semibold">Quiz title</span>
+          <input
+            type="text"
+            class="input input-bordered w-full"
+            [value]="quiz.title"
+            (input)="setTitle($any($event.target).value)"
+            placeholder="Quiz title"
+          />
+        </label>
+
+        <button class="btn btn-outline w-full lg:w-auto" (click)="addQuestion()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
+          </svg>
+          Add question
+        </button>
+      </div>
+
+      <div class="mt-5 flex flex-wrap gap-2" aria-label="Quiz summary">
         <span class="badge badge-ghost badge-lg">Subject: {{ quiz.subjectName }}</span>
         <span class="badge badge-primary badge-lg">Difficulty: {{ quiz.difficulty }}</span>
         <span class="badge badge-outline badge-lg">{{ quiz.questions.length }} questions</span>
+        @if (hasUnsavedChanges()) {
+          <span class="badge badge-warning badge-lg" role="status">Unsaved changes</span>
+        }
         @if (published()) {
           <span class="badge badge-success badge-lg">Published</span>
         } @else {
@@ -65,50 +141,44 @@
       </div>
 
       @if (saveError()) {
-        <div class="alert alert-error mt-4">
+        <div class="alert alert-error mt-5" role="alert">
           <span>{{ saveError() }}</span>
         </div>
       }
-
-      <div class="card-actions justify-end mt-4">
-        <button
-          class="btn btn-outline btn-sm"
-          (click)="addQuestion()"
-        >
-          Add Question
-        </button>
-      </div>
     </div>
   </section>
 
-  <!-- Editable question cards. pb-28 (≈7rem ≈ 112px) reserves room for the fixed
-       footer below so the last card's content scrolls fully into view, not under the bar. -->
-  <section class="space-y-4 pb-28">
+  <section class="space-y-4 pb-28" aria-label="Editable quiz questions">
     @for (question of quiz.questions; track $index; let i = $index) {
-      <div
-        class="card bg-base-100 border border-base-200 shadow-sm mb-4"
+      <article
+        class="preview-question-card card border border-base-200 bg-base-100 shadow-sm"
         [class.border-primary]="dragTarget() === i"
         [class.opacity-50]="dragTarget() === i"
         (dragover)="dragOver(i, $event)"
         (dragenter)="dragOver(i, $event)"
         (drop)="dragDrop($event)"
       >
-        <div class="card-body">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
+        <div class="card-body gap-5 p-5 sm:p-7">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-base-200 pb-4">
+            <div class="flex min-w-0 items-center gap-3">
               <button
                 type="button"
-                class="btn btn-ghost btn-xs cursor-move"
+                class="question-drag-handle btn btn-ghost btn-sm cursor-move"
                 draggable="true"
                 (dragstart)="dragStart(i, $event)"
                 (dragend)="dragEnd()"
                 [attr.aria-label]="'Drag question ' + (i + 1)"
+                title="Drag to reorder question"
               >
-                ⠿
+                &#8942;
               </button>
-              <p class="text-sm font-medium uppercase tracking-wide text-base-content/70">
-                Question {{ i + 1 }}
-              </p>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="badge badge-primary badge-lg min-w-12 font-semibold">Q{{ i + 1 }}</span>
+                  <p class="text-sm font-semibold text-base-content">Question {{ i + 1 }}</p>
+                </div>
+                <p class="mt-1 text-xs text-base-content/60">Edit the prompt and answer options below.</p>
+              </div>
             </div>
             <button
               class="btn btn-ghost btn-error btn-sm"
@@ -119,63 +189,98 @@
             </button>
           </div>
 
-          <textarea
-            class="textarea textarea-bordered w-full"
-            [value]="question.text"
-            (input)="updateQuestion(i, { text: $any($event.target).value })"
-            rows="2"
-            placeholder="Question text"
-          ></textarea>
+          <label class="form-control w-full gap-1.5">
+            <span class="label-text font-semibold">Question prompt</span>
+            <textarea
+              class="textarea textarea-bordered min-h-28 w-full leading-6"
+              [value]="question.text"
+              (input)="updateQuestion(i, { text: $any($event.target).value })"
+              rows="3"
+              placeholder="Question text"
+            ></textarea>
+          </label>
 
-          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-            @for (letter of optionLetters; track $index) {
-              <label class="flex items-start gap-2">
-                <input
-                  type="radio"
-                  class="radio radio-primary radio-sm mt-2"
-                  [name]="'correct-' + i"
-                  [value]="letter"
-                  [checked]="question.correctAnswer === letter"
-                  (change)="updateQuestion(i, { correctAnswer: letter })"
-                />
-                <input
-                  type="text"
-                  class="input input-bordered w-full"
-                  [value]="optionText(question, letter)"
-                  [placeholder]="'Option ' + letter + ' text'"
-                  (input)="onOptionInput(i, letter, $any($event.target).value)"
-                />
-              </label>
-            }
-          </div>
+          <fieldset class="space-y-3">
+            <legend class="text-sm font-semibold">Answer options</legend>
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+              @for (letter of optionLetters; track $index) {
+                <label
+                  class="option-field flex items-start gap-3 rounded-xl border border-base-200 bg-base-100 p-3 transition-colors"
+                  [class.correct-option]="question.correctAnswer === letter"
+                >
+                  <input
+                    type="radio"
+                    class="radio radio-success radio-sm mt-2"
+                    [name]="'correct-' + i"
+                    [value]="letter"
+                    [checked]="question.correctAnswer === letter"
+                    [attr.aria-label]="'Mark option ' + letter + ' as correct'"
+                    (change)="updateQuestion(i, { correctAnswer: letter })"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <div class="mb-1 flex min-h-5 items-center justify-between gap-2">
+                      <span class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
+                        Option {{ letter }}
+                      </span>
+                      @if (question.correctAnswer === letter) {
+                        <span class="badge badge-success badge-sm">Correct answer</span>
+                      }
+                    </div>
+                    <input
+                      type="text"
+                      class="input input-bordered w-full"
+                      [value]="optionText(question, letter)"
+                      [placeholder]="'Option ' + letter + ' text'"
+                      [attr.aria-label]="'Option ' + letter + ' text'"
+                      (input)="onOptionInput(i, letter, $any($event.target).value)"
+                    />
+                  </div>
+                </label>
+              }
+            </div>
+            <p class="text-xs text-base-content/60">Select the radio button next to the correct answer.</p>
+          </fieldset>
         </div>
-      </div>
+      </article>
     }
 
     @if (quiz.questions.length === 0) {
-      <div class="alert">
-        <span>No questions left. Add more before publishing.</span>
-      </div>
+      <app-state-panel
+        title="No questions yet"
+        message="Add at least one question before publishing this quiz."
+      />
     }
   </section>
 
-  <!-- Footer actions: pinned to the bottom of the viewport so Discard/Publish are
-       always visible. On desktop, offset left by the sidebar width (w-64 = 16rem) to
-       avoid overlapping the sidebar; z-20 matches the sidebar's z-index so the footer
-       stays above the sidebar on desktop and above the drawer overlay on mobile. -->
-  <div class="fixed bottom-0 left-0 right-0 z-20 mt-6 flex items-center justify-end gap-2 border-t border-base-200 bg-base-100/95 p-4 backdrop-blur md:left-[16rem]">
-    <button class="btn btn-ghost" (click)="cancel()">Discard</button>
-    <button
-      class="btn btn-primary"
-      [disabled]="saving() || quiz.questions.length === 0"
-      (click)="publishQuiz()"
-    >
-      @if (saving()) {
-        <span class="loading loading-spinner loading-sm"></span>
-        {{ editing() ? 'Updating…' : 'Publishing…' }}
-      } @else {
-        {{ editing() ? 'Update Quiz' : 'Publish Quiz' }}
-      }
-    </button>
+  <div
+    class="preview-action-bar fixed bottom-0 left-0 right-0 z-20 border-t border-base-200 bg-base-100/95 p-3 backdrop-blur sm:p-4 lg:left-64"
+    role="region"
+    aria-label="Quiz actions"
+  >
+    <div class="mx-auto flex w-full max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+      <div class="mr-auto flex min-h-5 items-center gap-2 text-sm">
+        @if (hasUnsavedChanges()) {
+          <span class="inline-flex items-center gap-2 text-warning" role="status">
+            <span class="h-2 w-2 rounded-full bg-warning" aria-hidden="true"></span>
+            Unsaved changes
+          </span>
+        }
+      </div>
+      <div class="flex w-full gap-2 sm:w-auto">
+        <button class="btn btn-ghost flex-1 sm:flex-none" (click)="cancel()">Discard</button>
+        <button
+          class="btn btn-primary flex-1 sm:flex-none"
+          [disabled]="saving() || quiz.questions.length === 0"
+          (click)="publishQuiz()"
+        >
+          @if (saving()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            {{ editing() ? 'Updating...' : 'Publishing...' }}
+          } @else {
+            {{ editing() ? 'Update Quiz' : 'Publish Quiz' }}
+          }
+        </button>
+      </div>
+    </div>
   </div>
 }

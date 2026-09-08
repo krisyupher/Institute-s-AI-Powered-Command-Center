@@ -4,6 +4,7 @@ import { forkJoin } from 'rxjs';
 
 import { Quiz, Subject } from '../../../core/models/quiz.model';
 import { QuizService } from '../../../core/services/quiz.service';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 
 /**
  * Ticket 3.5: teacher quiz management list view. Loads the teacher's quizzes
@@ -12,7 +13,7 @@ import { QuizService } from '../../../core/services/quiz.service';
  */
 @Component({
   selector: 'app-quiz-list',
-  imports: [RouterLink],
+  imports: [RouterLink, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'quiz-list.component.html',
   styleUrl: 'quiz-list.component.scss',

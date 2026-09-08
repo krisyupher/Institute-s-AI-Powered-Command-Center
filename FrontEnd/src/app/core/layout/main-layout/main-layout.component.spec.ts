@@ -60,12 +60,33 @@ describe('MainLayoutComponent', () => {
     const fixture = setup();
     const content = fixture.nativeElement.querySelector('.drawer-content');
     expect(content.className).toContain('overflow-y-auto');
+    expect(content.className).toContain('min-h-0');
+  });
+
+  it('uses responsive padding and a centered max-width content frame', () => {
+    const fixture = setup();
+    const content = fixture.nativeElement.querySelector('.drawer-content');
+    const frame = fixture.nativeElement.querySelector('.drawer-content > div');
+
+    expect(content.className).toContain('p-4');
+    expect(content.className).toContain('sm:p-6');
+    expect(content.className).toContain('lg:p-8');
+    expect(frame.className).toContain('mx-auto');
+    expect(frame.className).toContain('max-w-7xl');
+  });
+
+  it('keeps the drawer height constrained below the fixed header', () => {
+    const fixture = setup();
+    const drawer = fixture.nativeElement.querySelector('.drawer');
+    expect(drawer.className).toContain('min-h-0');
   });
 
   it('renders the sidebar inside .drawer-side', () => {
     const fixture = setup();
     const side = fixture.nativeElement.querySelector('.drawer-side app-sidebar');
     expect(side).toBeTruthy();
+    expect(side.className).toContain('h-full');
+    expect(side.className).toContain('min-h-0');
   });
 
   it('renders the header outside the scrollable drawer content, so it stays pinned', () => {
